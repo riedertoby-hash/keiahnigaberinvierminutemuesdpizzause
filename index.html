@@ -2,226 +2,423 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pizza-Roulette</title>
-<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pizza Roulette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
+  /* Layout: Bühne mit Holzofen-Glut links, Spieltisch rechts; auf schmalen Screens untereinander */
   :root {
-    --bg: #ffe8b0;
-    --panel: #fff7e0;
-    --ink: #2b1a0e;
-    --red: #e23b2e;
-    --white: #fffdf5;
-    --accent: #ff9f1c;
-    --green: #2a9d4b;
-    --muted: #8a7a66;
-    color-scheme: light;
+    --oven: #140e0a;
+    --char: #1e1611;
+    --char-2: #2a1f18;
+    --line: rgba(246, 234, 215, .10);
+    --line-strong: rgba(246, 234, 215, .22);
+    --cream: #f6ead7;
+    --muted: #a8937c;
+    --ember: #ff6a2b;
+    --ember-deep: #c8401b;
+    --tomato: #c9361f;
+    --mozz: #f3e6c8;
+    --basil: #6fae5b;
+    --brass: #d9ab5f;
+    --danger: #ff5a4a;
+    --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --f-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
-    font-family: "Nunito", system-ui, sans-serif;
-    color: var(--ink);
-    background: var(--bg) radial-gradient(circle at 20% 20%, #ffd27a 0 2px, transparent 3px) 0 0 / 28px 28px;
-    min-height: 100vh;
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--cream);
+    background:
+      radial-gradient(1200px 700px at 28% 38%, rgba(255, 106, 43, .16), transparent 60%),
+      radial-gradient(900px 500px at 80% 110%, rgba(201, 54, 31, .12), transparent 60%),
+      var(--oven);
+    -webkit-font-smoothing: antialiased;
   }
-  h1 {
-    font-family: "Bangers", cursive;
-    font-size: 56px;
-    letter-spacing: 2px;
-    margin: 16px 0 0;
-    text-align: center;
-    color: var(--red);
-    text-shadow: 3px 3px 0 var(--ink);
-    text-wrap: balance;
+  #embers { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .app {
+    position: relative; z-index: 1;
+    max-width: 1280px; margin: 0 auto;
+    padding-block: 20px 40px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
   }
-  .wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-  @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
-  .panel {
-    background: var(--panel);
-    border: 4px solid var(--ink);
-    border-radius: 18px;
-    box-shadow: 6px 6px 0 var(--ink);
-    padding: 16px;
-  }
-  h2 { font-family: "Bangers", cursive; letter-spacing: 1px; font-size: 28px; margin: 0 0 8px; }
 
-  /* Spielerliste */
+  /* Kopfzeile */
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding-bottom: 18px; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; min-width: 0; }
+  .wordmark {
+    font-family: var(--f-display); font-style: italic; font-weight: 800;
+    font-size: clamp(30px, 4.4vw, 46px); line-height: 1; letter-spacing: -.01em; margin: 0;
+  }
+  .wordmark em { font-style: normal; font-weight: 400; color: var(--ember); }
+  .tagline {
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
+  }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto;
+    display: grid; place-items: center; cursor: pointer;
+    background: var(--char); color: var(--cream); border: 1px solid var(--line-strong);
+    transition: border-color .2s, background .2s;
+  }
+  .icon-btn:hover { border-color: var(--brass); }
+  .icon-btn svg { width: 20px; height: 20px; }
+
+  main {
+    display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 44px); padding-top: 26px; align-items: start;
+    overflow-x: clip;
+  }
+  @media (max-width: 980px) { main { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Bühne mit Rad */
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0; }
+  .wheel-wrap {
+    position: relative; width: min(100%, 560px); aspect-ratio: 1; max-width: 100%;
+  }
+  .wheel-wrap::before {
+    content: ""; position: absolute; inset: -8%;
+    background: radial-gradient(circle, rgba(255, 120, 50, .28) 0%, rgba(255, 90, 30, .10) 45%, transparent 70%);
+    border-radius: 50%; animation: glow 4s ease-in-out infinite alternate;
+  }
+  @keyframes glow { from { opacity: .75; transform: scale(.98); } to { opacity: 1; transform: scale(1.02); } }
+  #wheel, #fx { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #wheel { filter: drop-shadow(0 26px 40px rgba(0, 0, 0, .65)); }
+  #fx { pointer-events: none; }
+  .pointer {
+    position: absolute; left: 50%; top: -2%; transform: translateX(-50%);
+    width: 9%; min-width: 34px; z-index: 2; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .6));
+  }
+  .pointer.bump { animation: bump .12s ease-out; }
+  @keyframes bump { 50% { transform: translateX(-50%) rotate(-9deg); } }
+
+  .result { text-align: center; min-height: 78px; max-width: 520px; }
+  .result-title {
+    font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 3.2vw, 36px);
+    line-height: 1.1; text-wrap: balance; margin: 0;
+  }
+  .result-sub { color: var(--muted); margin-top: 6px; font-size: 14px; }
+  .result.win .result-title { color: var(--brass); }
+  .result.lose .result-title { color: var(--danger); }
+  .result.pop .result-title { animation: pop .45s cubic-bezier(.2, 1.6, .4, 1); }
+  @keyframes pop { from { transform: scale(.85); opacity: 0; } }
+
+  /* Rechte Spalte */
+  .side { display: grid; gap: 22px; min-width: 0; }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px;
+  }
+  .label {
+    font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+  }
+
+  /* Spieler */
   .players { display: grid; gap: 8px; }
   .player {
-    display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
-    border: 3px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: var(--white);
-    font-weight: 800; transition: transform .2s;
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 16px;
+    padding: 12px 16px; border-radius: 14px;
+    background: var(--char); border: 1px solid var(--line);
+    transition: border-color .3s, background .3s, opacity .3s;
   }
-  .player.active { background: var(--accent); transform: scale(1.03); box-shadow: 3px 3px 0 var(--ink); }
-  .player.out { opacity: .45; }
-  .player .name { font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .player .mini { font-size: 18px; letter-spacing: 2px; min-height: 22px; }
-  .player .pts, .player .clock { font-family: "Bangers", cursive; font-size: 26px; letter-spacing: 1px; text-align: right; font-variant-numeric: tabular-nums; }
-  .player .clock { min-width: 64px; }
-  .player .clock.low { color: var(--red); }
+  .player.active {
+    background: linear-gradient(90deg, rgba(255, 106, 43, .14), rgba(255, 106, 43, .03) 70%), var(--char);
+    border-color: rgba(255, 106, 43, .6);
+    box-shadow: 0 0 0 1px rgba(255, 106, 43, .25), 0 10px 30px -12px rgba(255, 106, 43, .5);
+  }
+  .player.out { opacity: .38; }
+  .p-name { font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .p-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: 0 0 auto; }
+  .player.active .p-dot { background: var(--ember); box-shadow: 0 0 10px var(--ember); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+  .p-pizza { display: flex; gap: 4px; margin-top: 6px; }
+  .p-pizza canvas, .p-pizza .empty {
+    width: 22px; height: 22px; border-radius: 50%;
+  }
+  .p-pizza .empty { border: 1px dashed var(--line-strong); }
+  .p-pts { text-align: right; }
+  .p-pts b { font-family: var(--f-mono); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .p-pts small { display: block; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .p-clock {
+    font-family: var(--f-mono); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums;
+    padding: 6px 10px; border-radius: 8px; background: #0d0907; border: 1px solid var(--line);
+    min-width: 82px; text-align: center; color: var(--cream);
+  }
+  .player.active .p-clock { color: var(--ember); border-color: rgba(255, 106, 43, .4); }
+  .p-clock.low { color: var(--danger) !important; animation: pulse .8s infinite; }
+  .p-bar { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--ember); transition: width .1s linear; }
+  .player:not(.active) .p-bar { background: var(--line-strong); }
 
-  .wheel-box { position: relative; display: flex; justify-content: center; margin-top: 12px; }
-  canvas { max-width: 100%; height: auto; }
-  .pointer {
-    position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 18px solid transparent; border-right: 18px solid transparent;
-    border-top: 36px solid var(--ink);
-    filter: drop-shadow(0 2px 0 var(--accent));
+  /* Spieltisch */
+  .table {
+    padding: 18px; border-radius: 20px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .025), transparent 40%),
+      var(--char);
+    border: 1px solid var(--line);
   }
-  .msg {
-    min-height: 56px; margin-top: 12px; text-align: center;
-    font-family: "Bangers", cursive; font-size: 30px; letter-spacing: 1px;
-  }
-  .msg.win { color: var(--green); }
-  .msg.lose { color: var(--red); }
+  .turn { font-family: var(--f-display); font-size: 24px; font-weight: 700; margin: 0; line-height: 1.2; text-wrap: balance; }
+  .turn span { color: var(--ember); font-style: italic; }
+  .wallet { font-family: var(--f-mono); color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .wallet b { color: var(--cream); }
 
-  .turn { font-family: "Bangers", cursive; font-size: 30px; letter-spacing: 1px; margin-bottom: 10px; }
-  .turn span { color: var(--red); }
-  .chips { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chips { display: flex; gap: 12px; margin: 14px 0 18px; flex-wrap: wrap; }
   .chip {
-    width: 56px; height: 56px; border-radius: 50%;
-    border: 4px dashed var(--ink); background: var(--accent);
-    font-weight: 800; font-size: 18px; cursor: pointer;
+    --c: #e9e1d1; --t: #1e1611;
+    position: relative; width: 58px; height: 58px; border-radius: 50%; cursor: pointer;
+    border: 0; padding: 0; color: var(--t);
+    background:
+      radial-gradient(circle, var(--c) 0 50%, rgba(0, 0, 0, .25) 51% 54%, transparent 55%),
+      repeating-conic-gradient(var(--c) 0 22.5deg, #f6ead7 22.5deg 45deg);
+    box-shadow: inset 0 0 0 3px rgba(0, 0, 0, .25), 0 4px 0 rgba(0, 0, 0, .45), 0 8px 16px rgba(0, 0, 0, .35);
+    font-family: var(--f-mono); font-weight: 700; font-size: 16px;
+    transition: transform .15s, box-shadow .15s;
   }
-  .chip.active { outline: 4px solid var(--red); outline-offset: 2px; transform: scale(1.08); }
-  .bets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  @media (max-width: 480px) { .bets { grid-template-columns: repeat(2, 1fr); } }
-  .bet {
-    position: relative; border: 3px solid var(--ink); border-radius: 12px;
-    padding: 8px 4px; cursor: pointer; font-weight: 800; font-size: 15px;
-    background: var(--white); text-align: center; user-select: none;
-  }
-  .bet.red { background: var(--red); color: #fff; }
-  .bet .emo { font-size: 28px; display: block; }
-  .bet .odds { font-size: 12px; opacity: .8; }
-  .bet .stake {
-    position: absolute; top: -10px; right: -10px; min-width: 30px; height: 30px; padding: 0 6px;
-    border-radius: 15px; background: var(--accent); color: var(--ink); border: 3px solid var(--ink);
-    font-size: 14px; line-height: 24px; display: none;
-  }
-  .bet .stake.show { display: block; }
-  .bet:hover { transform: translateY(-2px); }
-  .colors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-  .hint { font-size: 13px; opacity: .75; margin: 8px 0 0; }
-  .actions { display: flex; gap: 10px; margin-top: 16px; }
-  button.main {
-    flex: 1; font-family: "Bangers", cursive; font-size: 30px; letter-spacing: 1px;
-    padding: 10px; border: 4px solid var(--ink); border-radius: 14px; cursor: pointer;
-    background: var(--green); color: #fff; box-shadow: 4px 4px 0 var(--ink);
-  }
-  button.main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
-  button.main:disabled { background: #999; cursor: not-allowed; }
-  button.sec { background: var(--white); color: var(--ink); flex: 0 0 auto; padding: 10px 16px; font-size: 22px; }
-  button:focus-visible, .bet:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
+  .chip[data-v="5"] { --c: #c9361f; --t: #fff3e3; }
+  .chip[data-v="10"] { --c: #3f7a3a; --t: #f6ead7; }
+  .chip[data-v="25"] { --c: #1b1410; --t: var(--brass); }
+  .chip:hover { transform: translateY(-2px); }
+  .chip.active { transform: translateY(-6px); box-shadow: inset 0 0 0 3px rgba(0, 0, 0, .25), 0 0 0 3px var(--oven), 0 0 0 5px var(--brass), 0 14px 22px rgba(0, 0, 0, .5); }
 
+  .bets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 520px) { .bets { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .bet {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 12px 6px 10px; border-radius: 14px; cursor: pointer;
+    font: inherit; color: var(--cream); text-align: center;
+    background: var(--char-2); border: 1px solid var(--line);
+    transition: transform .15s, border-color .2s, background .2s;
+  }
+  .bet::before {
+    content: ""; position: absolute; left: 10px; right: 10px; top: 0; height: 2px; border-radius: 0 0 2px 2px;
+    background: var(--mozz); opacity: .7;
+  }
+  .bet.rossa::before { background: var(--tomato); opacity: 1; }
+  .bet:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+  .bet.has { border-color: rgba(217, 171, 95, .7); background: linear-gradient(180deg, rgba(217, 171, 95, .10), transparent), var(--char-2); }
+  .bet canvas { width: 46px; height: 46px; }
+  .bet-name { font-weight: 600; font-size: 14px; }
+  .bet-odds { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+  .stake {
+    position: absolute; top: -9px; right: -7px; min-width: 32px; height: 32px; padding: 0 6px;
+    border-radius: 16px; display: none; place-items: center;
+    font-family: var(--f-mono); font-weight: 700; font-size: 12px; color: var(--oven);
+    background: radial-gradient(circle at 35% 30%, #f3d394, var(--brass) 60%, #a77a33);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .5), inset 0 0 0 2px rgba(0, 0, 0, .15);
+  }
+  .stake.show { display: grid; animation: drop .25s cubic-bezier(.2, 1.6, .4, 1); }
+  @keyframes drop { from { transform: translateY(-10px) scale(.6); opacity: 0; } }
+
+  .colors { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .colors .bet { flex-direction: row; justify-content: center; gap: 10px; padding: 14px 10px; }
+  .swatch { width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .25); }
+  .swatch.rossa { background: radial-gradient(circle at 35% 35%, #e3573b, #9c2716); }
+  .swatch.bianca { background: radial-gradient(circle at 35% 35%, #fff7e6, #e2cfa6); }
+  .colors .txt { text-align: left; line-height: 1.2; }
+  .colors .txt small { display: block; font-size: 11px; color: var(--muted); }
+
+  .actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 16px; }
+  .btn {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 14px; padding: 14px 18px;
+    border: 1px solid var(--line-strong); background: transparent; color: var(--cream);
+    transition: transform .1s, filter .2s, opacity .2s;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--cream); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-primary {
+    border: 0; color: #1a0d06; font-size: 18px; letter-spacing: .02em;
+    background: linear-gradient(180deg, #ff8a4c, var(--ember) 45%, var(--ember-deep));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 12px 28px -10px rgba(255, 106, 43, .8);
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn-primary:active:not(:disabled) { transform: translateY(1px); }
+  .btn-primary:disabled { background: var(--char-2); color: var(--muted); box-shadow: none; opacity: 1; }
+  kbd {
+    font-family: var(--f-mono); font-size: 11px; padding: 2px 6px; border-radius: 5px;
+    background: rgba(0, 0, 0, .18); border: 1px solid rgba(0, 0, 0, .2);
+  }
+  .btn-primary:disabled kbd { display: none; }
+  .hint { font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+  /* Overlays */
   .overlay {
-    position: fixed; inset: 0; background: rgba(43, 26, 14, .7);
-    display: flex; align-items: center; justify-content: center; z-index: 10; overflow-y: auto;
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(10, 6, 4, .78); backdrop-filter: blur(8px);
   }
   .overlay.hidden { display: none; }
-  .overlay .panel { max-width: 480px; width: 100%; text-align: center; margin: 16px; }
-  .overlay h2 { font-size: 44px; color: var(--red); }
-  .overlay ul { text-align: left; line-height: 1.5; padding-left: 20px; }
-  .count { display: flex; gap: 8px; justify-content: center; margin: 8px 0 12px; }
-  .count button {
-    width: 52px; height: 52px; border: 3px solid var(--ink); border-radius: 12px; background: var(--white);
-    font-family: "Bangers", cursive; font-size: 26px; cursor: pointer;
+  .sheet {
+    width: 100%; max-width: 560px; margin: auto 0;
+    padding: clamp(24px, 4vw, 40px); border-radius: 24px;
+    background: linear-gradient(180deg, #241a14, #1a130e); border: 1px solid var(--line-strong);
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, .8);
+    animation: rise .4s cubic-bezier(.2, .9, .3, 1);
   }
-  .count button.active { background: var(--accent); }
-  .names { display: grid; gap: 8px; margin-bottom: 14px; }
+  @keyframes rise { from { transform: translateY(16px); opacity: 0; } }
+  .sheet h2 {
+    font-family: var(--f-display); font-style: italic; font-weight: 800;
+    font-size: clamp(38px, 7vw, 56px); line-height: 1; margin: 8px 0 12px; text-wrap: balance;
+  }
+  .sheet h2 em { font-style: normal; font-weight: 400; color: var(--ember); }
+  .lede { color: var(--muted); margin: 0 0 22px; max-width: 46ch; }
+  .paytable { display: grid; border-top: 1px solid var(--line); margin-bottom: 24px; }
+  .paytable div {
+    display: flex; justify-content: space-between; gap: 12px; padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .paytable span:last-child { font-family: var(--f-mono); font-weight: 700; color: var(--brass); white-space: nowrap; }
+  .seg { display: inline-flex; padding: 4px; border-radius: 12px; background: #0d0907; border: 1px solid var(--line); margin: 8px 0 14px; }
+  .seg button {
+    font: inherit; font-family: var(--f-mono); font-weight: 700; font-size: 16px;
+    width: 56px; height: 40px; border-radius: 9px; border: 0; cursor: pointer;
+    background: transparent; color: var(--muted);
+  }
+  .seg button.active { background: var(--cream); color: var(--oven); }
+  .names { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 22px; }
+  @media (max-width: 460px) { .names { grid-template-columns: 1fr; } }
   .names input {
-    font: inherit; font-weight: 800; font-size: 18px; padding: 8px 12px;
-    border: 3px solid var(--ink); border-radius: 10px; background: var(--white); color: var(--ink);
+    font: inherit; font-weight: 600; padding: 12px 14px; border-radius: 12px; min-width: 0;
+    border: 1px solid var(--line-strong); background: #0d0907; color: var(--cream);
   }
-  .ranking { list-style: none; padding: 0 !important; font-size: 20px; font-weight: 800; }
-  .ranking li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 2px dashed var(--muted); }
-  .top-right { position: fixed; top: 12px; right: 12px; z-index: 5; }
-  .icon-btn {
-    border: 3px solid var(--ink); border-radius: 50%; width: 46px; height: 46px;
-    background: var(--panel); font-size: 22px; cursor: pointer;
+  .names input::placeholder { color: #6f604f; }
+  .sheet .btn-primary { width: 100%; padding: 18px; }
+  .ranking { list-style: none; margin: 0 0 18px; padding: 0; }
+  .ranking li {
+    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: baseline; gap: 10px;
+    padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 18px;
   }
-  @media (prefers-reduced-motion: reduce) { .player, .bet { transition: none; } }
+  .ranking li:first-child { font-size: 22px; }
+  .ranking li:first-child .rk-name { font-family: var(--f-display); font-style: italic; font-weight: 700; color: var(--brass); }
+  .rk-pos { font-family: var(--f-mono); color: var(--muted); font-size: 14px; }
+  .rk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rk-pts { font-family: var(--f-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .high { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
+  .high b { color: var(--brass); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<button class="icon-btn top-right" id="muteBtn" title="Ton an/aus">🔊</button>
-<h1>🍕 Pizza-Roulette 🍕</h1>
+<canvas id="embers" aria-hidden="true"></canvas>
 
-<div class="wrap">
-  <div class="panel">
-    <div class="players" id="players"></div>
-    <div class="wheel-box">
-      <div class="pointer"></div>
-      <canvas id="wheel" width="460" height="460"></canvas>
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1 class="wordmark">Pizza <em>Roulette</em></h1>
+      <span class="tagline">Forno · in vier Minuten muss die Pizza raus</span>
     </div>
-    <div class="msg" id="msg">Setz deine Chips!</div>
-  </div>
+    <button class="icon-btn" id="muteBtn" title="Ton aus" aria-label="Ton aus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="muteIcon"></svg>
+    </button>
+  </header>
 
-  <div class="panel">
-    <div class="turn" id="turn"></div>
-    <h2>Chip wählen</h2>
-    <div class="chips" id="chips"></div>
-    <h2>Einsätze</h2>
-    <div class="bets" id="toppingBets"></div>
-    <div class="colors" id="colorBets"></div>
-    <p class="hint">Linksklick: Chip setzen · Rechtsklick: Chip zurücknehmen · 🔥 Verbrannt = alles weg · Pizza: 3 verschiedene Belag-Treffer = +50</p>
-    <div class="actions">
-      <button class="main sec" id="clearBtn">Löschen</button>
-      <button class="main" id="spinBtn">Drehen!</button>
-    </div>
-  </div>
+  <main>
+    <section class="stage" aria-label="Rad">
+      <div class="wheel-wrap">
+        <canvas id="wheel" aria-hidden="true"></canvas>
+        <canvas id="fx" aria-hidden="true"></canvas>
+        <svg class="pointer" id="pointer" viewBox="0 0 40 52" aria-hidden="true">
+          <defs>
+            <linearGradient id="brass" x1="0" x2="1">
+              <stop offset="0" stop-color="#a77a33"/><stop offset=".45" stop-color="#f3d394"/><stop offset="1" stop-color="#b98a3e"/>
+            </linearGradient>
+          </defs>
+          <path d="M4 4 H36 Q38 4 37 6 L21.5 48 Q20 51 18.5 48 L3 6 Q2 4 4 4 Z" fill="url(#brass)" stroke="#2a1a0c" stroke-width="2"/>
+          <circle cx="20" cy="13" r="4" fill="#1e1611"/>
+        </svg>
+      </div>
+      <div class="result" id="result" aria-live="polite">
+        <p class="result-title" id="resultTitle">Setzt eure Chips</p>
+        <div class="result-sub" id="resultSub">Belag 7× · Rossa oder Bianca 2× · Verbrannt: alles weg</div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section>
+        <div class="section-head"><span class="label">Spieler</span><span class="label" id="roundLabel">Zug 1</span></div>
+        <div class="players" id="players"></div>
+      </section>
+
+      <section class="table" aria-label="Spieltisch">
+        <div class="section-head">
+          <p class="turn" id="turn">Am Zug: <span>–</span></p>
+          <span class="wallet" id="wallet"></span>
+        </div>
+        <span class="label">Chip</span>
+        <div class="chips" id="chips"></div>
+        <span class="label">Belag · 7×</span>
+        <div class="bets" id="toppingBets" style="margin-top:10px"></div>
+        <div class="colors" id="colorBets"></div>
+        <div class="actions">
+          <button class="btn" id="clearBtn">Zurücknehmen</button>
+          <button class="btn btn-primary" id="spinBtn">Drehen <kbd>Leertaste</kbd></button>
+        </div>
+        <p class="hint">Klick setzt den gewählten Chip, Rechtsklick nimmt ihn zurück. Tasten 1–4 wählen den Chip. Drei verschiedene getroffene Beläge ergeben eine Pizza: +50.</p>
+      </section>
+    </aside>
+  </main>
 </div>
 
 <div class="overlay" id="startOverlay">
-  <div class="panel">
-    <h2>Pizza-Roulette</h2>
-    <ul>
-      <li>Jeder startet mit <b>100 Punkten</b> und einer eigenen Uhr von <b>2 Minuten</b>.</li>
-      <li>Es wird abwechselnd gedreht. Deine Uhr läuft nur, solange du am Zug bist.</li>
-      <li>Belag richtig: <b>7×</b> · Farbe richtig: <b>2×</b> · 🔥 Verbrannt: alles weg.</li>
-      <li>3 verschiedene Beläge getroffen: <b>Pizza fertig, +50</b>.</li>
-      <li>Wer keine Zeit oder keine Punkte mehr hat, scheidet aus. Am Schluss gewinnt der höchste Punktestand.</li>
-    </ul>
-    <h2 style="font-size:28px;color:var(--ink)">Wie viele Spieler?</h2>
-    <div class="count" id="countBtns"></div>
+  <div class="sheet" role="dialog" aria-labelledby="startTitle">
+    <span class="label">Forno · 2 bis 4 Spieler</span>
+    <h2 id="startTitle">Pizza <em>Roulette</em></h2>
+    <p class="lede">Ihr dreht abwechselnd. Jeder hat eine eigene Uhr, die nur läuft, solange er am Zug ist. Wer am Schluss die meisten Punkte hat, gewinnt.</p>
+    <div class="paytable">
+      <div><span>Belag getroffen</span><span>7×</span></div>
+      <div><span>Rossa oder Bianca getroffen</span><span>2×</span></div>
+      <div><span>Verbrannt</span><span>Einsatz weg</span></div>
+      <div><span>Pizza komplett, 3 verschiedene Beläge</span><span>+50</span></div>
+      <div><span>Startguthaben · Uhr pro Spieler</span><span>100 · 2:00</span></div>
+    </div>
+    <span class="label">Anzahl Spieler</span><br>
+    <div class="seg" id="countBtns"></div>
     <div class="names" id="nameInputs"></div>
-    <button class="main" id="startBtn">Ofen an!</button>
+    <button class="btn btn-primary" id="startBtn">Ofen anheizen</button>
   </div>
 </div>
 
 <div class="overlay hidden" id="endOverlay">
-  <div class="panel">
-    <h2 id="endTitle">Feierabend!</h2>
+  <div class="sheet" role="dialog" aria-labelledby="endTitle">
+    <span class="label">Schlussrechnung</span>
+    <h2 id="endTitle">Feierabend</h2>
     <ul class="ranking" id="ranking"></ul>
-    <p style="font-weight:800" id="endHigh"></p>
-    <button class="main" id="restartBtn">Nochmal!</button>
+    <p class="high" id="endHigh"></p>
+    <button class="btn btn-primary" id="restartBtn">Neue Runde</button>
   </div>
 </div>
 
 <script>
 (() => {
-  // --- Spieldaten ---
+  // ---------- Spieldaten ----------
   const TOPPINGS = {
-    salami:   { name: "Salami",   emo: "🍕", color: "red" },
-    schinken: { name: "Schinken", emo: "🥓", color: "red" },
-    peperoni: { name: "Peperoni", emo: "🌶️", color: "red" },
-    tomate:   { name: "Tomate",   emo: "🍅", color: "red" },
-    kaese:    { name: "Käse",     emo: "🧀", color: "white" },
-    pilze:    { name: "Pilze",    emo: "🍄", color: "white" },
-    ananas:   { name: "Ananas",   emo: "🍍", color: "white" },
-    kapern:   { name: "Kapern",   emo: "🫒", color: "white" },
+    salami:   { name: "Salami",   color: "rossa" },
+    schinken: { name: "Schinken", color: "rossa" },
+    peperoni: { name: "Peperoni", color: "rossa" },
+    tomate:   { name: "Tomate",   color: "rossa" },
+    kaese:    { name: "Käse",     color: "bianca" },
+    pilze:    { name: "Pilze",    color: "bianca" },
+    ananas:   { name: "Ananas",   color: "bianca" },
+    kapern:   { name: "Kapern",   color: "bianca" },
   };
-  // Radfelder: rot/weiß abwechselnd, jeder Belag zweimal, ein Feld "verbrannt"
+  // Rossa (mit Tomatensauce) und Bianca (ohne) wechseln sich ab, jeder Belag zweimal, ein Feld verbrannt
   const FIELDS = ["burnt",
     "salami", "kaese", "schinken", "pilze", "peperoni", "ananas", "tomate", "kapern",
     "salami", "kaese", "schinken", "pilze", "peperoni", "ananas", "tomate", "kapern"];
@@ -229,97 +426,356 @@
   const START_BALANCE = 100, CLOCK_SECONDS = 120;
   const CHIP_VALUES = [1, 5, 10, 25];
   const SEG = Math.PI * 2 / FIELDS.length;
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // --- Zustand ---
-  let players = [], current = 0, bets = {}, chip = 5, rotation = 0;
-  let spinning = false, running = false, timerId = null, lastTick = 0;
-  let playerCount = 2;
+  // ---------- Zustand ----------
+  let players = [], current = 0, bets = {}, chip = 5, rotation = 0, turnNo = 1;
+  let spinning = false, running = false, timerId = null, lastTick = 0, playerCount = 2;
+  let highlight = 0;
   let highscore = 0;
   try { highscore = Number(localStorage.getItem("pizzaRouletteHigh")) || 0; } catch (e) {}
 
   const $ = id => document.getElementById(id);
-  const canvas = $("wheel"), ctx = canvas.getContext("2d");
   const cur = () => players[current];
 
-  // --- Sound (Web Audio, ohne Dateien, bewusst leise) ---
+  // Fester Zufall für die Pizza-Textur, damit sie bei jedem Laden gleich aussieht
+  function seeded(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  // ---------- Belag-Zeichnungen (Mittelpunkt 0,0, Grösse s) ----------
+  const ICONS = {
+    salami(c, s) {
+      const g = c.createRadialGradient(-s * .12, -s * .12, s * .05, 0, 0, s * .45);
+      g.addColorStop(0, "#c8423a"); g.addColorStop(1, "#86201a");
+      c.beginPath(); c.arc(0, 0, s * .44, 0, 7); c.fillStyle = g; c.fill();
+      c.lineWidth = s * .05; c.strokeStyle = "#5e140f"; c.stroke();
+      const r = seeded(7);
+      c.fillStyle = "rgba(255, 214, 200, .85)";
+      for (let i = 0; i < 9; i++) { const a = r() * 7, d = r() * s * .3; c.beginPath(); c.arc(Math.cos(a) * d, Math.sin(a) * d, s * (.03 + r() * .03), 0, 7); c.fill(); }
+    },
+    schinken(c, s) {
+      c.save(); c.rotate(-.25);
+      c.beginPath();
+      c.moveTo(-s * .42, -s * .18);
+      c.bezierCurveTo(-s * .3, -s * .42, s * .3, -s * .38, s * .44, -s * .12);
+      c.bezierCurveTo(s * .5, s * .2, s * .2, s * .38, -s * .1, s * .32);
+      c.bezierCurveTo(-s * .4, s * .3, -s * .52, s * .05, -s * .42, -s * .18);
+      const g = c.createLinearGradient(0, -s * .4, 0, s * .4);
+      g.addColorStop(0, "#f2b4ae"); g.addColorStop(1, "#d77f7b");
+      c.fillStyle = g; c.fill();
+      c.lineWidth = s * .04; c.strokeStyle = "#a95653"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .3, -s * .05); c.quadraticCurveTo(0, -s * .2, s * .32, -s * .02);
+      c.lineWidth = s * .06; c.strokeStyle = "rgba(255, 238, 232, .85)"; c.lineCap = "round"; c.stroke();
+      c.restore();
+    },
+    peperoni(c, s) {
+      c.save(); c.rotate(.2);
+      c.beginPath();
+      c.moveTo(-s * .34, -s * .26);
+      c.quadraticCurveTo(s * .12, -s * .16, s * .44, s * .34);
+      c.quadraticCurveTo(s * .02, s * .2, -s * .38, -s * .06);
+      c.closePath();
+      const g = c.createLinearGradient(-s * .3, -s * .3, s * .4, s * .3);
+      g.addColorStop(0, "#ef4a33"); g.addColorStop(1, "#a51b10");
+      c.fillStyle = g; c.fill();
+      c.lineWidth = s * .03; c.strokeStyle = "#6e100a"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .26, -s * .18); c.quadraticCurveTo(s * .08, -s * .1, s * .3, s * .18);
+      c.lineWidth = s * .035; c.strokeStyle = "rgba(255, 220, 200, .55)"; c.lineCap = "round"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .36, -s * .16); c.quadraticCurveTo(-s * .46, -s * .28, -s * .4, -s * .42);
+      c.lineWidth = s * .08; c.strokeStyle = "#4c8a3c"; c.stroke();
+      c.restore();
+    },
+    tomate(c, s) {
+      c.beginPath(); c.arc(0, 0, s * .44, 0, 7); c.fillStyle = "#d93a24"; c.fill();
+      c.lineWidth = s * .04; c.strokeStyle = "#951f10"; c.stroke();
+      c.beginPath(); c.arc(0, 0, s * .36, 0, 7); c.fillStyle = "#ee5a3e"; c.fill();
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2;
+        c.save(); c.rotate(a); c.translate(s * .2, 0);
+        c.beginPath(); c.ellipse(0, 0, s * .11, s * .07, 0, 0, 7); c.fillStyle = "#ffb49a"; c.fill();
+        c.fillStyle = "#f7d77b";
+        for (let k = -1; k <= 1; k++) { c.beginPath(); c.arc(k * s * .045, 0, s * .018, 0, 7); c.fill(); }
+        c.restore();
+      }
+      c.beginPath(); c.arc(0, 0, s * .06, 0, 7); c.fillStyle = "#ff9476"; c.fill();
+    },
+    kaese(c, s) {
+      c.beginPath();
+      c.moveTo(-s * .44, s * .26); c.lineTo(s * .44, s * .26); c.lineTo(s * .44, s * .04); c.lineTo(-s * .2, -s * .34); c.closePath();
+      const g = c.createLinearGradient(0, -s * .3, 0, s * .3);
+      g.addColorStop(0, "#ffe08a"); g.addColorStop(1, "#f0b93a");
+      c.fillStyle = g; c.fill();
+      c.beginPath(); c.moveTo(-s * .44, s * .26); c.lineTo(s * .44, s * .26); c.lineTo(s * .44, s * .04); c.lineTo(-s * .44, s * .04);
+      c.fillStyle = "rgba(201, 138, 22, .35)"; c.fill();
+      c.lineWidth = s * .035; c.strokeStyle = "#a8741a"; c.lineJoin = "round";
+      c.beginPath(); c.moveTo(-s * .44, s * .26); c.lineTo(s * .44, s * .26); c.lineTo(s * .44, s * .04); c.lineTo(-s * .2, -s * .34); c.closePath(); c.stroke();
+      c.fillStyle = "#d99a26";
+      [[.08, -.04, .07], [.26, .14, .05], [-.16, .16, .05], [-.1, -.12, .035]].forEach(([x, y, r]) => { c.beginPath(); c.arc(x * s, y * s, r * s, 0, 7); c.fill(); });
+    },
+    pilze(c, s) {
+      c.beginPath(); c.moveTo(-s * .12, 0); c.lineTo(-s * .14, s * .36); c.quadraticCurveTo(0, s * .42, s * .14, s * .36); c.lineTo(s * .12, 0); c.closePath();
+      c.fillStyle = "#efe1c8"; c.fill(); c.lineWidth = s * .03; c.strokeStyle = "#8a6a46"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .44, s * .04); c.bezierCurveTo(-s * .44, -s * .42, s * .44, -s * .42, s * .44, s * .04);
+      c.quadraticCurveTo(0, -s * .04, -s * .44, s * .04);
+      const g = c.createLinearGradient(0, -s * .35, 0, s * .05);
+      g.addColorStop(0, "#b98557"); g.addColorStop(1, "#8b5c35");
+      c.fillStyle = g; c.fill(); c.strokeStyle = "#5e3c20"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .3, -s * .02); c.quadraticCurveTo(0, -s * .1, s * .3, -s * .02);
+      c.lineWidth = s * .025; c.strokeStyle = "rgba(255, 236, 210, .5)"; c.stroke();
+    },
+    ananas(c, s) {
+      c.save(); c.rotate(-.15);
+      c.beginPath();
+      c.moveTo(-s * .4, s * .28); c.lineTo(s * .4, s * .28); c.lineTo(s * .26, -s * .3); c.lineTo(-s * .26, -s * .3); c.closePath();
+      const g = c.createLinearGradient(0, -s * .3, 0, s * .3);
+      g.addColorStop(0, "#ffe27a"); g.addColorStop(1, "#f0b52c");
+      c.fillStyle = g; c.fill();
+      c.lineWidth = s * .035; c.strokeStyle = "#b07d12"; c.lineJoin = "round"; c.stroke();
+      c.beginPath(); c.moveTo(-s * .26, -s * .3); c.lineTo(s * .26, -s * .3); c.lineWidth = s * .08; c.strokeStyle = "#e9a51e"; c.stroke();
+      c.lineWidth = s * .018; c.strokeStyle = "rgba(176, 125, 18, .6)";
+      for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(i * s * .1, -s * .24); c.lineTo(i * s * .14, s * .26); c.stroke(); }
+      c.restore();
+    },
+    kapern(c, s) {
+      [[-.17, .1], [.18, .08], [0, -.18]].forEach(([x, y], i) => {
+        const cx = x * s, cy = y * s, r = s * (i === 2 ? .19 : .17);
+        const g = c.createRadialGradient(cx - r * .35, cy - r * .35, r * .1, cx, cy, r);
+        g.addColorStop(0, "#a9bf63"); g.addColorStop(1, "#4e6527");
+        c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fillStyle = g; c.fill();
+        c.lineWidth = s * .025; c.strokeStyle = "#33461a"; c.stroke();
+        c.beginPath(); c.arc(cx - r * .35, cy - r * .35, r * .18, 0, 7); c.fillStyle = "rgba(255, 255, 230, .6)"; c.fill();
+      });
+    },
+    burnt(c, s) {
+      c.beginPath();
+      c.moveTo(0, -s * .46);
+      c.bezierCurveTo(s * .1, -s * .25, s * .38, -s * .1, s * .3, s * .18);
+      c.bezierCurveTo(s * .24, s * .4, -s * .24, s * .42, -s * .3, s * .18);
+      c.bezierCurveTo(-s * .36, -s * .02, -s * .14, -s * .08, -s * .06, -s * .2);
+      c.bezierCurveTo(-s * .04, -s * .3, -s * .02, -s * .38, 0, -s * .46);
+      const g = c.createLinearGradient(0, -s * .45, 0, s * .4);
+      g.addColorStop(0, "#ffd166"); g.addColorStop(.5, "#ff7a2f"); g.addColorStop(1, "#c8361b");
+      c.fillStyle = g; c.fill();
+      c.beginPath();
+      c.moveTo(0, -s * .05); c.bezierCurveTo(s * .14, s * .06, s * .14, s * .3, 0, s * .3); c.bezierCurveTo(-s * .14, s * .3, -s * .14, s * .1, 0, -s * .05);
+      c.fillStyle = "#ffe8a3"; c.fill();
+    },
+    basil(c, s) {
+      [[-.5, 1], [.55, -1]].forEach(([rot, flip]) => {
+        c.save(); c.rotate(rot);
+        c.beginPath(); c.moveTo(0, 0);
+        c.bezierCurveTo(s * .14 * flip, -s * .1, s * .2 * flip, -s * .32, 0, -s * .46);
+        c.bezierCurveTo(-s * .2 * flip, -s * .32, -s * .14 * flip, -s * .1, 0, 0);
+        const g = c.createLinearGradient(0, 0, 0, -s * .46);
+        g.addColorStop(0, "#3f7a32"); g.addColorStop(1, "#6fae5b");
+        c.fillStyle = g; c.fill();
+        c.beginPath(); c.moveTo(0, -s * .02); c.lineTo(0, -s * .4); c.lineWidth = s * .02; c.strokeStyle = "rgba(220, 255, 200, .5)"; c.stroke();
+        c.restore();
+      });
+    },
+  };
+  function iconCanvas(key, cssSize) {
+    const cv = document.createElement("canvas"), d = Math.min(3, (window.devicePixelRatio || 1)) * cssSize;
+    cv.width = cv.height = d;
+    const c = cv.getContext("2d"); c.translate(d / 2, d / 2); ICONS[key](c, d * .92);
+    return cv;
+  }
+
+  // ---------- Pizza einmal vorzeichnen, beim Drehen nur noch rotieren ----------
+  const wheel = $("wheel"), wctx = wheel.getContext("2d");
+  const fx = $("fx"), fctx = fx.getContext("2d");
+  let pizza = null, W = 0;
+  function renderPizza() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.round(wheel.clientWidth * dpr) || 560;
+    wheel.width = wheel.height = fx.width = fx.height = W;
+    const off = document.createElement("canvas"); off.width = off.height = W;
+    const c = off.getContext("2d"), m = W / 2, R = m * .97, r = R * .86;
+    c.translate(m, m);
+    // Rand
+    const crust = c.createRadialGradient(0, 0, r * .96, 0, 0, R);
+    crust.addColorStop(0, "#9a5a22"); crust.addColorStop(.25, "#e6b06a"); crust.addColorStop(.75, "#d18e45"); crust.addColorStop(1, "#7d461b");
+    c.beginPath(); c.arc(0, 0, R, 0, 7); c.fillStyle = crust; c.fill();
+    const rnd = seeded(42);
+    for (let i = 0; i < 90; i++) {
+      const a = rnd() * 7, d = r + (R - r) * (.25 + rnd() * .6);
+      c.beginPath(); c.ellipse(Math.cos(a) * d, Math.sin(a) * d, W * (.004 + rnd() * .01), W * (.003 + rnd() * .006), a, 0, 7);
+      c.fillStyle = `rgba(${rnd() < .3 ? "40,20,8" : "120,60,20"},${.25 + rnd() * .4})`; c.fill();
+    }
+    // Stücke
+    FIELDS.forEach((f, i) => {
+      const a0 = i * SEG, a1 = a0 + SEG;
+      c.save();
+      c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, r, a0, a1); c.closePath(); c.clip();
+      const base = c.createRadialGradient(0, 0, r * .1, 0, 0, r);
+      if (f === "burnt") { base.addColorStop(0, "#3a2c24"); base.addColorStop(1, "#120c09"); }
+      else if (TOPPINGS[f].color === "rossa") { base.addColorStop(0, "#d64a2c"); base.addColorStop(1, "#9d2a17"); }
+      else { base.addColorStop(0, "#fbf1db"); base.addColorStop(1, "#e3cd9f"); }
+      c.fillStyle = base; c.fillRect(-m, -m, W, W);
+      // Textur
+      for (let k = 0; k < 26; k++) {
+        const a = a0 + rnd() * SEG, d = r * (.15 + rnd() * .82);
+        const x = Math.cos(a) * d, y = Math.sin(a) * d;
+        c.beginPath(); c.ellipse(x, y, W * (.006 + rnd() * .018), W * (.004 + rnd() * .012), rnd() * 3, 0, 7);
+        if (f === "burnt") c.fillStyle = rnd() < .2 ? "rgba(255,110,40,.55)" : "rgba(0,0,0,.45)";
+        else if (TOPPINGS[f].color === "rossa") c.fillStyle = `rgba(255,236,190,${.18 + rnd() * .3})`;
+        else c.fillStyle = `rgba(196,132,60,${.15 + rnd() * .25})`;
+        c.fill();
+      }
+      if (f === "burnt") {
+        c.strokeStyle = "rgba(0,0,0,.6)"; c.lineWidth = W * .002;
+        for (let k = 0; k < 6; k++) { c.beginPath(); let a = a0 + rnd() * SEG, d = r * .2; c.moveTo(Math.cos(a) * d, Math.sin(a) * d); for (let j = 0; j < 5; j++) { a += (rnd() - .5) * .08; d += r * .15; c.lineTo(Math.cos(a) * d, Math.sin(a) * d); } c.stroke(); }
+      }
+      c.restore();
+      // Schnittlinie
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a0) * R * .99, Math.sin(a0) * R * .99);
+      c.lineWidth = W * .006; c.strokeStyle = "rgba(30,14,6,.75)"; c.stroke();
+      c.lineWidth = W * .0018; c.strokeStyle = "rgba(255,230,190,.18)"; c.stroke();
+      // Belag
+      const mid = a0 + SEG / 2, ir = r * .66, is = r * .2;
+      c.save(); c.rotate(mid); c.translate(ir, 0); c.rotate(Math.PI / 2);
+      c.shadowColor = "rgba(0,0,0,.45)"; c.shadowBlur = W * .01; c.shadowOffsetY = W * .004;
+      ICONS[f](c, is);
+      c.restore();
+      // Beschriftung
+      c.save(); c.rotate(mid); c.translate(r * .9, 0); c.rotate(Math.PI / 2);
+      c.font = `600 ${Math.round(W * .021)}px "Instrument Sans", sans-serif`;
+      c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillStyle = f === "burnt" ? "rgba(255,150,90,.9)" : TOPPINGS[f].color === "rossa" ? "rgba(255,240,225,.85)" : "rgba(90,52,20,.8)";
+      const label = (f === "burnt" ? "Verbrannt" : TOPPINGS[f].name).toUpperCase().split("").join(String.fromCharCode(8202));
+      c.fillText(label, 0, 0);
+      c.restore();
+    });
+    // Innenrand des Teigs
+    c.beginPath(); c.arc(0, 0, r, 0, 7); c.lineWidth = W * .006; c.strokeStyle = "rgba(60,25,8,.55)"; c.stroke();
+    // Basilikum in der Mitte
+    c.save(); c.translate(0, W * .02); c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = W * .015; ICONS.basil(c, r * .34); c.restore();
+    pizza = off;
+    drawWheel();
+  }
+  function drawWheel() {
+    if (!pizza) return;
+    const m = W / 2;
+    wctx.clearRect(0, 0, W, W);
+    wctx.save(); wctx.translate(m, m); wctx.rotate(rotation); wctx.drawImage(pizza, -m, -m); wctx.restore();
+    // Glanz
+    const sheen = wctx.createRadialGradient(m * .7, m * .55, 0, m * .7, m * .55, m * 1.1);
+    sheen.addColorStop(0, "rgba(255,240,210,.14)"); sheen.addColorStop(1, "rgba(255,240,210,0)");
+    wctx.beginPath(); wctx.arc(m, m, m * .97, 0, 7); wctx.fillStyle = sheen; wctx.fill();
+    // Treffer-Markierung oben
+    if (highlight > 0) {
+      const a = -Math.PI / 2, R = m * .97 * .86;
+      wctx.save(); wctx.translate(m, m);
+      wctx.beginPath(); wctx.moveTo(0, 0); wctx.arc(0, 0, R, a - SEG / 2, a + SEG / 2); wctx.closePath();
+      wctx.lineWidth = W * .007; wctx.strokeStyle = `rgba(243,211,148,${highlight})`;
+      wctx.shadowColor = `rgba(255,190,90,${highlight})`; wctx.shadowBlur = W * .03;
+      wctx.stroke(); wctx.restore();
+    }
+  }
+
+  // ---------- Partikel ----------
+  let parts = [], fxRunning = false;
+  function burst(kind) {
+    if (REDUCED) return;
+    const m = W / 2, x = m, y = W * .1;
+    const n = kind === "bonus" ? 140 : kind === "big" ? 110 : kind === "burnt" ? 70 : 60;
+    for (let i = 0; i < n; i++) {
+      const a = kind === "burnt" ? -Math.PI / 2 + (Math.random() - .5) * 1.4 : Math.random() * Math.PI * 2;
+      const sp = (kind === "burnt" ? 1.5 : 3) + Math.random() * (kind === "bonus" ? 9 : 6);
+      const cols = kind === "burnt" ? ["#ff6a2b", "#ffb25b", "#3a2c24", "#5a463a"] : ["#f3d394", "#d9ab5f", "#ff8a4c", "#fff3d6", "#6fae5b"];
+      parts.push({
+        x: kind === "burnt" ? m + (Math.random() - .5) * W * .1 : x, y: kind === "burnt" ? y + W * .08 : y,
+        vx: Math.cos(a) * sp * W / 560, vy: Math.sin(a) * sp * W / 560,
+        g: kind === "burnt" ? -.03 : .12, life: 1, decay: .008 + Math.random() * .014,
+        r: (kind === "burnt" ? 3 + Math.random() * 6 : 2 + Math.random() * 4) * W / 560,
+        c: cols[Math.floor(Math.random() * cols.length)], rect: kind !== "burnt" && Math.random() < .5, rot: Math.random() * 6,
+      });
+    }
+    if (!fxRunning) { fxRunning = true; requestAnimationFrame(stepFx); }
+  }
+  function stepFx() {
+    fctx.clearRect(0, 0, W, W);
+    parts = parts.filter(p => p.life > 0);
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy; p.vy += p.g * W / 560; p.vx *= .985; p.life -= p.decay; p.rot += .1;
+      fctx.globalAlpha = Math.max(0, p.life); fctx.fillStyle = p.c;
+      if (p.rect) { fctx.save(); fctx.translate(p.x, p.y); fctx.rotate(p.rot); fctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); fctx.restore(); }
+      else { fctx.beginPath(); fctx.arc(p.x, p.y, p.r, 0, 7); fctx.fill(); }
+    }
+    fctx.globalAlpha = 1;
+    if (highlight > 0 && !spinning) { highlight = Math.max(0, highlight - .004); drawWheel(); }
+    if (parts.length || (highlight > 0 && !spinning)) requestAnimationFrame(stepFx); else fxRunning = false;
+  }
+
+  // Glut im Hintergrund
+  (function embers() {
+    if (REDUCED) return;
+    const cv = $("embers"), c = cv.getContext("2d");
+    let list = [];
+    function size() { cv.width = innerWidth; cv.height = innerHeight; }
+    size(); addEventListener("resize", size);
+    for (let i = 0; i < 36; i++) list.push(spawn(true));
+    function spawn(any) { return { x: Math.random() * innerWidth, y: any ? Math.random() * innerHeight : innerHeight + 10, v: .2 + Math.random() * .5, r: .6 + Math.random() * 1.6, w: Math.random() * 6, a: .2 + Math.random() * .5 }; }
+    (function loop(t) {
+      c.clearRect(0, 0, cv.width, cv.height);
+      list.forEach((e, i) => {
+        e.y -= e.v; e.x += Math.sin(t / 1400 + e.w) * .25;
+        if (e.y < -10) list[i] = spawn(false);
+        c.beginPath(); c.arc(e.x, e.y, e.r, 0, 7);
+        c.fillStyle = `rgba(255,${120 + Math.round(e.w * 10)},60,${e.a * Math.min(1, e.y / innerHeight + .2)})`; c.fill();
+      });
+      requestAnimationFrame(loop);
+    })(0);
+  })();
+
+  // ---------- Sound (Web Audio, leise abgemischt) ----------
   let audio = null, master = null, muted = false;
   function ac() {
     if (!audio) {
       audio = new (window.AudioContext || window.webkitAudioContext)();
-      master = audio.createGain(); master.gain.value = 0.35;
-      master.connect(audio.destination);
+      master = audio.createGain(); master.gain.value = .32; master.connect(audio.destination);
     }
     return audio;
   }
-  function tone(freq, dur, type = "triangle", vol = 0.1, delay = 0, slideTo = null) {
+  function tone(freq, dur, type = "triangle", vol = .1, delay = 0, slideTo = null) {
     if (muted) return;
-    const a = ac(), t = a.currentTime + delay;
-    const o = a.createOscillator(), g = a.createGain();
+    const a = ac(), t = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t);
     if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(master);
-    o.start(t); o.stop(t + dur + 0.02);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(master); o.start(t); o.stop(t + dur + .02);
   }
-  function noise(dur, vol = 0.1, delay = 0, freq = 2000, q = 1, type = "bandpass") {
+  function noise(dur, vol = .1, delay = 0, freq = 2000, q = 1, type = "bandpass") {
     if (muted) return;
     const a = ac(), t = a.currentTime + delay;
-    const buf = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate);
-    const d = buf.getChannelData(0);
+    const buf = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     const src = a.createBufferSource(); src.buffer = buf;
     const f = a.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
-    const g = a.createGain();
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f).connect(g).connect(master);
-    src.start(t);
+    const g = a.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(f).connect(g).connect(master); src.start(t);
   }
-  const sChip = () => { noise(0.05, 0.25, 0, 3500, 4); tone(1200, 0.04, "sine", 0.05); };
-  const sTick = () => { noise(0.03, 0.3, 0, 2500, 6); tone(1800, 0.02, "sine", 0.03); };
-  const sDrumroll = () => { for (let i = 0; i < 24; i++) noise(0.06, 0.06 + i * 0.004, i * 0.045, 900, 1.5); };
-  const sLand = () => { tone(784, 0.25, "sine", 0.12); tone(1175, 0.35, "sine", 0.08, 0.05); };
-  const sWin = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, "triangle", 0.14, i * 0.09));
-  const sBigWin = () => {
-    [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, "triangle", 0.14, i * 0.08));
-    [0, 0.16, 0.32, 0.48].forEach(d => noise(0.15, 0.12, d, 6000, 0.7, "highpass"));
-  };
-  const sLose = () => tone(330, 0.5, "triangle", 0.12, 0, 160);
-  const sBurnt = () => { noise(1.2, 0.35, 0, 4000, 0.5, "highpass"); tone(180, 0.6, "sawtooth", 0.05, 0.1, 70); };
-  const sBonus = () => [784, 988, 1175, 1568, 1175, 1568].forEach((f, i) => tone(f, 0.16, "triangle", 0.14, i * 0.08));
-  const sTurn = () => { tone(660, 0.15, "sine", 0.12); tone(990, 0.25, "sine", 0.1, 0.12); };
-  const sWarn = () => tone(880, 0.06, "sine", 0.06);
-  const sOut = () => [440, 370, 311, 262].forEach((f, i) => tone(f, 0.25, "triangle", 0.1, i * 0.15));
-  $("muteBtn").onclick = () => { muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊"; };
+  const sChip = () => { noise(.05, .25, 0, 3500, 4); tone(1300, .04, "sine", .04); };
+  const sTick = () => noise(.03, .28, 0, 2400, 6);
+  const sDrumroll = () => { for (let i = 0; i < 26; i++) noise(.06, .05 + i * .004, i * .045, 900, 1.5); };
+  const sLand = () => { tone(784, .25, "sine", .1); tone(1175, .35, "sine", .07, .05); };
+  const sWin = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .22, "triangle", .13, i * .09));
+  const sBigWin = () => { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, .22, "triangle", .13, i * .08)); [0, .16, .32, .48].forEach(d => noise(.15, .1, d, 6000, .7, "highpass")); };
+  const sLose = () => tone(330, .5, "triangle", .1, 0, 160);
+  const sBurnt = () => { noise(1.2, .32, 0, 4000, .5, "highpass"); tone(180, .6, "sawtooth", .04, .1, 70); };
+  const sBonus = () => [784, 988, 1175, 1568, 1175, 1568].forEach((f, i) => tone(f, .16, "triangle", .13, i * .08));
+  const sTurn = () => { tone(660, .15, "sine", .1); tone(990, .25, "sine", .08, .12); };
+  const sWarn = () => tone(880, .06, "sine", .05);
+  const sOut = () => [440, 370, 311, 262].forEach((f, i) => tone(f, .25, "triangle", .09, i * .15));
 
-  // --- Rad zeichnen ---
-  function drawWheel() {
-    const W = canvas.width, c = W / 2, r = c - 10;
-    ctx.clearRect(0, 0, W, W);
-    ctx.beginPath(); ctx.arc(c, c, r + 6, 0, Math.PI * 2);
-    ctx.fillStyle = "#c97b2a"; ctx.fill();
-    FIELDS.forEach((f, i) => {
-      const a0 = rotation + i * SEG, a1 = a0 + SEG;
-      ctx.beginPath(); ctx.moveTo(c, c); ctx.arc(c, c, r, a0, a1); ctx.closePath();
-      ctx.fillStyle = f === "burnt" ? "#2b2b2b" : TOPPINGS[f].color === "red" ? "#e23b2e" : "#fffdf5";
-      ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = "#2b1a0e"; ctx.stroke();
-      ctx.save();
-      ctx.translate(c, c); ctx.rotate(a0 + SEG / 2);
-      ctx.translate(r * 0.74, 0); ctx.rotate(Math.PI / 2);
-      ctx.font = "30px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(f === "burnt" ? "🔥" : TOPPINGS[f].emo, 0, 0);
-      ctx.restore();
-    });
-    ctx.beginPath(); ctx.arc(c, c, r * 0.22, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffd27a"; ctx.fill(); ctx.lineWidth = 4; ctx.stroke();
-    ctx.font = "44px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("🍕", c, c + 2);
+  const ICON_ON = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>';
+  const ICON_OFF = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>';
+  function setMuteIcon() {
+    $("muteIcon").innerHTML = muted ? ICON_OFF : ICON_ON;
+    const t = muted ? "Ton an" : "Ton aus"; $("muteBtn").title = t; $("muteBtn").setAttribute("aria-label", t);
   }
+  $("muteBtn").onclick = () => { muted = !muted; setMuteIcon(); };
 
-  // --- Startbildschirm ---
+  // ---------- Startbildschirm ----------
   function buildSetup() {
     $("countBtns").innerHTML = "";
     [2, 3, 4].forEach(n => {
@@ -332,39 +788,50 @@
     $("nameInputs").innerHTML = "";
     for (let i = 0; i < playerCount; i++) {
       const inp = document.createElement("input");
-      inp.id = "name" + i; inp.maxLength = 16;
-      inp.placeholder = "Spieler " + (i + 1);
-      inp.value = old[i] || "";
+      inp.id = "name" + i; inp.maxLength = 16; inp.autocomplete = "off";
+      inp.placeholder = "Spieler " + (i + 1); inp.value = old[i] || "";
+      inp.setAttribute("aria-label", "Name Spieler " + (i + 1));
+      inp.onkeydown = e => { if (e.key === "Enter") startGame(); };
       $("nameInputs").appendChild(inp);
     }
   }
 
-  // --- Einsätze UI ---
-  function buildBetUI() {
+  // ---------- Spieltisch ----------
+  function buildTable() {
     $("chips").innerHTML = "";
     CHIP_VALUES.forEach(v => {
       const b = document.createElement("button");
-      b.className = "chip" + (v === chip ? " active" : "");
-      b.textContent = v;
-      b.onclick = () => { chip = v; buildBetUI(); };
+      b.className = "chip" + (v === chip ? " active" : ""); b.dataset.v = v; b.textContent = v;
+      b.setAttribute("aria-label", "Chip " + v);
+      b.onclick = () => selectChip(v);
       $("chips").appendChild(b);
     });
     $("toppingBets").innerHTML = ""; $("colorBets").innerHTML = "";
-    Object.entries(TOPPINGS).forEach(([key, t]) =>
-      $("toppingBets").appendChild(betButton(key, `<span class="emo">${t.emo}</span>${t.name}<br><span class="odds">${PAYOUT_TOPPING}×</span>`, t.color)));
-    $("colorBets").appendChild(betButton("red", `Rot <span class="odds">${PAYOUT_COLOR}×</span>`, "red"));
-    $("colorBets").appendChild(betButton("white", `Weiß <span class="odds">${PAYOUT_COLOR}×</span>`, "white"));
-    refresh();
+    Object.entries(TOPPINGS).forEach(([key, t]) => {
+      const b = betButton(key);
+      b.classList.toggle("rossa", t.color === "rossa");
+      b.append(iconCanvas(key, 46));
+      b.insertAdjacentHTML("beforeend", `<span class="bet-name">${t.name}</span><span class="bet-odds">${PAYOUT_TOPPING}×</span>`);
+      $("toppingBets").appendChild(b);
+    });
+    [["rossa", "Rossa", "mit Tomatensauce"], ["bianca", "Bianca", "ohne Sauce"]].forEach(([key, name, sub]) => {
+      const b = betButton(key);
+      b.classList.toggle("rossa", key === "rossa");
+      b.insertAdjacentHTML("beforeend", `<span class="swatch ${key}"></span><span class="txt"><span class="bet-name">${name}</span> <span class="bet-odds">${PAYOUT_COLOR}×</span><small>${sub}</small></span>`);
+      $("colorBets").appendChild(b);
+    });
   }
-  function betButton(key, html, color) {
-    const d = document.createElement("div");
-    d.className = "bet" + (color === "red" ? " red" : "");
-    d.tabIndex = 0;
-    d.innerHTML = html + `<span class="stake" id="stake-${key}"></span>`;
-    d.onclick = () => placeBet(key, chip);
-    d.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); placeBet(key, chip); } };
-    d.oncontextmenu = e => { e.preventDefault(); placeBet(key, -chip); };
-    return d;
+  function selectChip(v) {
+    chip = v;
+    document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", Number(c.dataset.v) === v));
+  }
+  function betButton(key) {
+    const b = document.createElement("button");
+    b.className = "bet"; b.dataset.key = key;
+    b.innerHTML = `<span class="stake" id="stake-${key}"></span>`;
+    b.onclick = () => placeBet(key, chip);
+    b.oncontextmenu = e => { e.preventDefault(); placeBet(key, -chip); };
+    return b;
   }
   function placeBet(key, amount) {
     if (!running || spinning) return;
@@ -374,46 +841,72 @@
     bets[key] = have + amount;
     if (!bets[key]) delete bets[key];
     p.balance -= amount;
-    sChip();
-    refresh();
+    sChip(); refresh();
   }
   const totalBet = () => Object.values(bets).reduce((a, b) => a + b, 0);
   function returnBets() { if (players.length) cur().balance += totalBet(); bets = {}; }
 
-  // --- Anzeige ---
-  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
-  function renderPlayers() {
+  // ---------- Spieler-Karten ----------
+  function buildPlayers() {
     $("players").innerHTML = "";
-    players.forEach((p, i) => {
+    players.forEach(p => {
       const d = document.createElement("div");
-      d.className = "player" + (i === current && running ? " active" : "") + (p.out ? " out" : "");
-      const mini = p.pizza.map(k => TOPPINGS[k].emo).join("") + "◯".repeat(3 - p.pizza.length);
-      d.innerHTML = `<div><div class="name"></div><div class="mini" title="Pizza-Fortschritt">${mini}</div></div>
-        <div class="pts">${p.balance}</div>
-        <div class="clock${p.time <= 15 && !p.out ? " low" : ""}">${p.out ? "aus" : fmt(p.time)}</div>`;
-      d.querySelector(".name").textContent = (i === current && running ? "▶ " : "") + p.name;
+      d.className = "player";
+      d.innerHTML = `<div><div class="p-name"><span class="p-dot"></span><span class="nm"></span></div><div class="p-pizza"></div></div>
+        <div class="p-pts"><b>0</b><small>Punkte</small></div>
+        <div class="p-clock">2:00</div><div class="p-bar"></div>`;
+      d.querySelector(".nm").textContent = p.name;
+      p.el = { root: d, pts: d.querySelector(".p-pts b"), clock: d.querySelector(".p-clock"), bar: d.querySelector(".p-bar"), pizza: d.querySelector(".p-pizza") };
+      p.sig = null;
       $("players").appendChild(d);
+    });
+    updatePlayers();
+  }
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  function updatePlayers() {
+    players.forEach((p, i) => {
+      const e = p.el; if (!e) return;
+      e.root.classList.toggle("active", running && i === current && !p.out);
+      e.root.classList.toggle("out", p.out);
+      e.pts.textContent = p.balance;
+      e.clock.textContent = p.out ? "raus" : fmt(p.time);
+      e.clock.classList.toggle("low", !p.out && running && i === current && p.time <= 15);
+      e.bar.style.width = (p.out ? 0 : p.time / CLOCK_SECONDS * 100) + "%";
+      const sig = p.pizza.join();
+      if (sig !== p.sig) {
+        p.sig = sig; e.pizza.innerHTML = "";
+        for (let k = 0; k < 3; k++) {
+          if (p.pizza[k]) { const cv = iconCanvas(p.pizza[k], 22); cv.title = TOPPINGS[p.pizza[k]].name; e.pizza.append(cv); }
+          else { const s = document.createElement("span"); s.className = "empty"; e.pizza.append(s); }
+        }
+      }
     });
   }
   function refresh() {
-    renderPlayers();
-    if (running && players.length) {
-      $("turn").innerHTML = "";
-      $("turn").append("Am Zug: ");
-      const s = document.createElement("span"); s.textContent = cur().name; $("turn").append(s);
+    updatePlayers();
+    $("roundLabel").textContent = "Zug " + turnNo;
+    if (players.length) {
+      const p = cur();
+      $("turn").innerHTML = "Am Zug: <span></span>"; $("turn").querySelector("span").textContent = p.name;
+      $("wallet").innerHTML = `Guthaben <b>${p.balance}</b> · Einsatz <b>${totalBet()}</b>`;
     }
-    document.querySelectorAll(".stake").forEach(s => {
-      const v = bets[s.id.slice(6)];
-      s.textContent = v || ""; s.classList.toggle("show", !!v);
+    document.querySelectorAll(".bet").forEach(b => {
+      const v = bets[b.dataset.key], s = b.querySelector(".stake");
+      b.classList.toggle("has", !!v);
+      if (s.textContent !== String(v || "")) { s.textContent = v || ""; s.classList.remove("show"); if (v) { void s.offsetWidth; s.classList.add("show"); } }
     });
     $("spinBtn").disabled = !running || spinning || totalBet() === 0;
     $("clearBtn").disabled = !running || spinning || totalBet() === 0;
   }
-  function setMsg(text, cls = "") { const m = $("msg"); m.textContent = text; m.className = "msg " + cls; }
+  function setResult(title, sub = "", cls = "") {
+    const r = $("result");
+    $("resultTitle").textContent = title; $("resultSub").textContent = sub;
+    r.className = "result " + cls; void r.offsetWidth; r.classList.add("pop");
+  }
 
   $("clearBtn").onclick = () => { if (!spinning) { returnBets(); refresh(); } };
 
-  // --- Uhr: läuft nur für den aktiven Spieler und nicht während das Rad dreht ---
+  // ---------- Schachuhr: läuft nur für den aktiven Spieler, steht während das Rad dreht ----------
   function startClock() {
     clearInterval(timerId);
     lastTick = performance.now();
@@ -425,139 +918,141 @@
       const after = Math.ceil(p.time);
       if (after !== before && after <= 10 && after > 0) sWarn();
       if (p.time <= 0) {
-        p.time = 0;
-        returnBets();
-        knockOut(p, "⏰ Zeit abgelaufen");
+        p.time = 0; returnBets(); p.out = true; sOut();
+        setResult(`Zeit abgelaufen`, `${p.name} ist raus.`, "lose");
+        nextTurn(true);
         return;
       }
-      renderPlayers();
+      updatePlayers();
     }, 100);
   }
 
-  function knockOut(p, reason) {
-    p.out = true; sOut();
-    setMsg(`${reason}: ${p.name} ist raus`, "lose");
-    nextTurn(true);
-  }
-
-  function nextTurn(afterKnockout = false) {
+  function nextTurn(silent = false) {
     bets = {};
-    const alive = players.filter(p => !p.out);
-    if (!alive.length) { setTimeout(endGame, 1200); running = false; refresh(); return; }
+    if (!players.some(p => !p.out)) { running = false; refresh(); setTimeout(endGame, 1400); return; }
     let i = current;
     do { i = (i + 1) % players.length; } while (players[i].out);
     const changed = i !== current;
-    current = i;
-    if (changed && players.length > 1) {
-      setTimeout(() => { if (running) { sTurn(); if (!afterKnockout) setMsg(`${cur().name} ist dran!`); } }, afterKnockout ? 1000 : 1400);
-    }
+    current = i; turnNo++;
+    if (changed) setTimeout(() => { if (running) { sTurn(); if (!silent) $("resultSub").textContent += ` Jetzt ist ${cur().name} dran.`; } }, 1500);
     lastTick = performance.now();
     refresh();
   }
 
-  // --- Drehen ---
-  function randomIndex() {
-    const a = new Uint32Array(1); crypto.getRandomValues(a);
-    return a[0] % FIELDS.length;
-  }
-  $("spinBtn").onclick = () => {
+  // ---------- Drehen ----------
+  function randomIndex() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % FIELDS.length; }
+  function spin() {
     if (spinning || !totalBet() || !running) return;
-    spinning = true; refresh(); setMsg("Dreht sich …"); sDrumroll();
+    spinning = true; highlight = 0; refresh();
+    setResult("Das Rad dreht …", `${cur().name} setzt ${totalBet()} Punkte.`);
+    sDrumroll();
     const idx = randomIndex();
-    // Zielwinkel: Feldmitte unter dem Zeiger (oben = -90°)
-    let target = -Math.PI / 2 - (idx + 0.5) * SEG + (Math.random() - 0.5) * SEG * 0.7;
+    let target = -Math.PI / 2 - (idx + .5) * SEG + (Math.random() - .5) * SEG * .7;
     const turns = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
     while (target < rotation + turns) target += Math.PI * 2;
-    const start = rotation, dist = target - start, dur = 4200, t0 = performance.now();
-    let lastSeg = Math.floor(start / SEG);
+    const start = rotation, dist = target - start, dur = REDUCED ? 1200 : 4600, t0 = performance.now();
+    let lastSeg = Math.floor((start + Math.PI / 2) / SEG);
+    const ptr = $("pointer");
     function frame(now) {
       const p = Math.min(1, (now - t0) / dur);
       rotation = start + dist * (1 - Math.pow(1 - p, 4));
-      const seg = Math.floor(rotation / SEG);
-      if (seg !== lastSeg) { sTick(); lastSeg = seg; }
+      const seg = Math.floor((rotation + Math.PI / 2) / SEG);
+      if (seg !== lastSeg) { sTick(); lastSeg = seg; ptr.classList.remove("bump"); void ptr.offsetWidth; ptr.classList.add("bump"); }
       drawWheel();
-      if (p < 1) requestAnimationFrame(frame);
-      else resolve(FIELDS[idx]);
+      if (p < 1) requestAnimationFrame(frame); else resolve(FIELDS[idx]);
     }
     requestAnimationFrame(frame);
-  };
+  }
+  $("spinBtn").onclick = spin;
 
   function resolve(field) {
     const p = cur(), stake = totalBet();
-    let win = 0;
     const hitTopping = field !== "burnt" && (bets[field] || 0) > 0;
+    let win = 0;
     if (field !== "burnt") {
       win += (bets[field] || 0) * PAYOUT_TOPPING;
       win += (bets[TOPPINGS[field].color] || 0) * PAYOUT_COLOR;
     }
-    p.balance += win;
-    bets = {};
-    sLand();
-    setTimeout(() => {
-      if (field === "burnt") { setMsg(`🔥 Verbrannt! ${p.name} verliert ${stake}`, "lose"); sBurnt(); }
-      else {
-        const net = win - stake, t = TOPPINGS[field];
-        const txt = net > 0 ? `+${net}` : net === 0 ? "Einsatz zurück" : `−${-net}`;
-        setMsg(`${t.emo} ${t.name}! ${p.name}: ${txt}`, net > 0 ? "win" : net < 0 ? "lose" : "");
-        if (net >= stake * 3) sBigWin(); else if (net > 0) sWin(); else if (net < 0) sLose();
-      }
-    }, 250);
+    p.balance += win; bets = {};
+    highlight = 1; drawWheel(); sLand();
+    if (!fxRunning) { fxRunning = true; requestAnimationFrame(stepFx); }
+    const net = win - stake;
+    if (field === "burnt") { setResult("Verbrannt!", `${p.name} verliert den ganzen Einsatz von ${stake}.`, "lose"); setTimeout(sBurnt, 150); burst("burnt"); }
+    else {
+      const t = TOPPINGS[field], col = t.color === "rossa" ? "Rossa" : "Bianca";
+      if (net > 0) { setResult(`${t.name} · ${col}`, `${p.name} gewinnt ${net} Punkte.`, "win"); if (net >= stake * 3) { sBigWin(); burst("big"); } else { sWin(); burst("win"); } }
+      else if (net === 0) setResult(`${t.name} · ${col}`, `${p.name} bekommt den Einsatz zurück.`);
+      else { setResult(`${t.name} · ${col}`, `${p.name} verliert ${-net} Punkte.`, "lose"); sLose(); }
+    }
     let bonus = false;
     if (hitTopping && !p.pizza.includes(field)) {
       p.pizza.push(field);
-      if (p.pizza.length === 3) { p.balance += PIZZA_BONUS; p.pizza = []; bonus = true; }
+      if (p.pizza.length === 3) { p.balance += PIZZA_BONUS; bonus = true; }
     }
     spinning = false;
-    if (bonus) setTimeout(() => { setMsg(`🍕 Pizza fertig! ${p.name} +${PIZZA_BONUS}`, "win"); sBonus(); }, 1300);
+    if (bonus) {
+      updatePlayers();
+      setTimeout(() => { setResult("Pizza komplett!", `${p.name} erhält ${PIZZA_BONUS} Bonuspunkte.`, "win"); sBonus(); burst("bonus"); p.pizza = []; updatePlayers(); }, 1300);
+    }
     if (p.balance <= 0) {
       p.out = true;
-      setTimeout(() => { setMsg(`💸 Pleite: ${p.name} ist raus`, "lose"); sOut(); }, 1400);
-      nextTurn(true);
-      return;
+      setTimeout(() => { setResult("Pleite", `${p.name} ist raus.`, "lose"); sOut(); }, 1500);
+      nextTurn(true); return;
     }
     nextTurn();
   }
 
-  // --- Spielablauf ---
+  // ---------- Tastatur ----------
+  addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT" || !running) return;
+    if (e.code === "Space") { e.preventDefault(); spin(); }
+    if (["1", "2", "3", "4"].includes(e.key)) selectChip(CHIP_VALUES[Number(e.key) - 1]);
+  });
+
+  // ---------- Spielablauf ----------
+  function makePlayers(n, names = []) {
+    return Array.from({ length: n }, (_, i) => ({ name: names[i] || "Spieler " + (i + 1), balance: START_BALANCE, time: CLOCK_SECONDS, pizza: [], out: false }));
+  }
   function startGame() {
-    players = [];
-    for (let i = 0; i < playerCount; i++) {
-      const v = ($("name" + i)?.value || "").trim();
-      players.push({ name: v || "Spieler " + (i + 1), balance: START_BALANCE, time: CLOCK_SECONDS, pizza: [], out: false });
-    }
-    current = 0; bets = {}; running = true; spinning = false;
+    const names = [];
+    for (let i = 0; i < playerCount; i++) names.push(($("name" + i)?.value || "").trim());
+    players = makePlayers(playerCount, names);
+    current = 0; turnNo = 1; bets = {}; running = true; spinning = false; highlight = 0;
     $("startOverlay").classList.add("hidden"); $("endOverlay").classList.add("hidden");
-    setMsg(`${cur().name} fängt an!`);
-    sTurn();
-    startClock();
-    refresh();
+    buildPlayers();
+    setResult(`${cur().name} beginnt`, "Chips setzen, dann drehen.");
+    sTurn(); startClock(); refresh(); drawWheel();
   }
   function endGame() {
     running = false; clearInterval(timerId);
-    const ranked = [...players].sort((a, b) => b.balance - a.balance);
-    const best = ranked[0];
-    $("endTitle").textContent = best.balance > 0 ? `🏆 ${best.name} gewinnt!` : "Alle pleite! 🔥";
+    const ranked = [...players].sort((a, b) => b.balance - a.balance), best = ranked[0];
+    $("endTitle").innerHTML = best.balance > 0 ? "<em></em> gewinnt" : "Alle pleite";
+    if (best.balance > 0) $("endTitle").querySelector("em").textContent = best.name;
     $("ranking").innerHTML = "";
     ranked.forEach((p, i) => {
       const li = document.createElement("li");
-      const a = document.createElement("span"); a.textContent = `${i + 1}. ${p.name}`;
-      const b = document.createElement("span"); b.textContent = p.balance + " P";
-      li.append(a, b); $("ranking").appendChild(li);
+      li.innerHTML = `<span class="rk-pos">${String(i + 1).padStart(2, "0")}</span><span class="rk-name"></span><span class="rk-pts">${p.balance}</span>`;
+      li.querySelector(".rk-name").textContent = p.name;
+      $("ranking").appendChild(li);
     });
-    let txt = `Highscore: ${Math.max(highscore, best.balance)}`;
     if (best.balance > highscore) {
-      highscore = best.balance; txt = "Neuer Highscore: " + highscore + "!";
+      highscore = best.balance;
       try { localStorage.setItem("pizzaRouletteHigh", highscore); } catch (e) {}
-    }
-    $("endHigh").textContent = txt;
+      $("endHigh").innerHTML = `Neuer Highscore auf diesem Gerät: <b>${highscore}</b>`;
+    } else $("endHigh").innerHTML = `Highscore auf diesem Gerät: <b>${highscore}</b>`;
     $("endOverlay").classList.remove("hidden");
-    if (best.balance > 0) sBonus();
+    if (best.balance > 0) { sBonus(); burst("bonus"); }
     refresh();
   }
   $("startBtn").onclick = startGame;
   $("restartBtn").onclick = () => { $("endOverlay").classList.add("hidden"); $("startOverlay").classList.remove("hidden"); buildSetup(); };
 
-  buildSetup(); buildBetUI(); drawWheel(); refresh();
+  // ---------- Start ----------
+  players = makePlayers(2);
+  setMuteIcon(); buildSetup(); buildTable(); buildPlayers(); refresh();
+  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderPizza, 150); });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(renderPizza);
+  renderPizza();
 })();
 </script>
 </body>
