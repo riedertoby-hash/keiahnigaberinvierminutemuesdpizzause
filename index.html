@@ -12,9 +12,10 @@
     --ink: #2b1a0e;
     --red: #e23b2e;
     --white: #fffdf5;
-    --burnt: #2b2b2b;
     --accent: #ff9f1c;
     --green: #2a9d4b;
+    --muted: #8a7a66;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   body {
@@ -32,6 +33,7 @@
     text-align: center;
     color: var(--red);
     text-shadow: 3px 3px 0 var(--ink);
+    text-wrap: balance;
   }
   .wrap {
     max-width: 1100px;
@@ -50,8 +52,23 @@
     box-shadow: 6px 6px 0 var(--ink);
     padding: 16px;
   }
-  .stats { display: flex; justify-content: space-between; gap: 8px; font-weight: 800; font-size: 20px; }
-  .stats .big { font-family: "Bangers", cursive; font-size: 36px; letter-spacing: 1px; }
+  h2 { font-family: "Bangers", cursive; letter-spacing: 1px; font-size: 28px; margin: 0 0 8px; }
+
+  /* Spielerliste */
+  .players { display: grid; gap: 8px; }
+  .player {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
+    border: 3px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: var(--white);
+    font-weight: 800; transition: transform .2s;
+  }
+  .player.active { background: var(--accent); transform: scale(1.03); box-shadow: 3px 3px 0 var(--ink); }
+  .player.out { opacity: .45; }
+  .player .name { font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player .mini { font-size: 18px; letter-spacing: 2px; min-height: 22px; }
+  .player .pts, .player .clock { font-family: "Bangers", cursive; font-size: 26px; letter-spacing: 1px; text-align: right; font-variant-numeric: tabular-nums; }
+  .player .clock { min-width: 64px; }
+  .player .clock.low { color: var(--red); }
+
   .wheel-box { position: relative; display: flex; justify-content: center; margin-top: 12px; }
   canvas { max-width: 100%; height: auto; }
   .pointer {
@@ -67,22 +84,25 @@
   }
   .msg.win { color: var(--green); }
   .msg.lose { color: var(--red); }
-  h2 { font-family: "Bangers", cursive; letter-spacing: 1px; font-size: 28px; margin: 0 0 8px; }
-  .chips { display: flex; gap: 10px; margin-bottom: 14px; }
+
+  .turn { font-family: "Bangers", cursive; font-size: 30px; letter-spacing: 1px; margin-bottom: 10px; }
+  .turn span { color: var(--red); }
+  .chips { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
   .chip {
     width: 56px; height: 56px; border-radius: 50%;
     border: 4px dashed var(--ink); background: var(--accent);
     font-weight: 800; font-size: 18px; cursor: pointer;
   }
   .chip.active { outline: 4px solid var(--red); outline-offset: 2px; transform: scale(1.08); }
-  .bets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .bets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 480px) { .bets { grid-template-columns: repeat(2, 1fr); } }
   .bet {
     position: relative; border: 3px solid var(--ink); border-radius: 12px;
-    padding: 10px 6px; cursor: pointer; font-weight: 800; font-size: 16px;
+    padding: 8px 4px; cursor: pointer; font-weight: 800; font-size: 15px;
     background: var(--white); text-align: center; user-select: none;
   }
   .bet.red { background: var(--red); color: #fff; }
-  .bet .emo { font-size: 30px; display: block; }
+  .bet .emo { font-size: 28px; display: block; }
   .bet .odds { font-size: 12px; opacity: .8; }
   .bet .stake {
     position: absolute; top: -10px; right: -10px; min-width: 30px; height: 30px; padding: 0 6px;
@@ -102,25 +122,35 @@
   button.main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
   button.main:disabled { background: #999; cursor: not-allowed; }
   button.sec { background: var(--white); color: var(--ink); flex: 0 0 auto; padding: 10px 16px; font-size: 22px; }
-  .pizza { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-weight: 800; }
-  .slot {
-    width: 48px; height: 48px; border-radius: 50%; border: 3px dashed var(--ink);
-    display: flex; align-items: center; justify-content: center; font-size: 26px; background: #f6d08a;
-  }
-  .slot.filled { border-style: solid; background: #f4b860; }
+  button:focus-visible, .bet:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
+
   .overlay {
     position: fixed; inset: 0; background: rgba(43, 26, 14, .7);
-    display: flex; align-items: center; justify-content: center; z-index: 10;
+    display: flex; align-items: center; justify-content: center; z-index: 10; overflow-y: auto;
   }
   .overlay.hidden { display: none; }
-  .overlay .panel { max-width: 460px; text-align: center; margin: 16px; }
+  .overlay .panel { max-width: 480px; width: 100%; text-align: center; margin: 16px; }
   .overlay h2 { font-size: 44px; color: var(--red); }
-  .overlay ul { text-align: left; line-height: 1.5; }
-  .top-right { position: fixed; top: 12px; right: 12px; }
+  .overlay ul { text-align: left; line-height: 1.5; padding-left: 20px; }
+  .count { display: flex; gap: 8px; justify-content: center; margin: 8px 0 12px; }
+  .count button {
+    width: 52px; height: 52px; border: 3px solid var(--ink); border-radius: 12px; background: var(--white);
+    font-family: "Bangers", cursive; font-size: 26px; cursor: pointer;
+  }
+  .count button.active { background: var(--accent); }
+  .names { display: grid; gap: 8px; margin-bottom: 14px; }
+  .names input {
+    font: inherit; font-weight: 800; font-size: 18px; padding: 8px 12px;
+    border: 3px solid var(--ink); border-radius: 10px; background: var(--white); color: var(--ink);
+  }
+  .ranking { list-style: none; padding: 0 !important; font-size: 20px; font-weight: 800; }
+  .ranking li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 2px dashed var(--muted); }
+  .top-right { position: fixed; top: 12px; right: 12px; z-index: 5; }
   .icon-btn {
     border: 3px solid var(--ink); border-radius: 50%; width: 46px; height: 46px;
     background: var(--panel); font-size: 22px; cursor: pointer;
   }
+  @media (prefers-reduced-motion: reduce) { .player, .bet { transition: none; } }
 </style>
 </head>
 <body>
@@ -129,32 +159,22 @@
 
 <div class="wrap">
   <div class="panel">
-    <div class="stats">
-      <div>Punkte<br><span class="big" id="balance">100</span></div>
-      <div style="text-align:center">Zeit<br><span class="big" id="timer">4:00</span></div>
-      <div style="text-align:right">Highscore<br><span class="big" id="highscore">0</span></div>
-    </div>
+    <div class="players" id="players"></div>
     <div class="wheel-box">
       <div class="pointer"></div>
-      <canvas id="wheel" width="440" height="440"></canvas>
+      <canvas id="wheel" width="460" height="460"></canvas>
     </div>
     <div class="msg" id="msg">Setz deine Chips!</div>
-    <div class="pizza">
-      Pizza:
-      <div class="slot" id="slot0"></div>
-      <div class="slot" id="slot1"></div>
-      <div class="slot" id="slot2"></div>
-      <span style="font-size:13px;opacity:.75">3 verschiedene Treffer = +50 Bonus</span>
-    </div>
   </div>
 
   <div class="panel">
+    <div class="turn" id="turn"></div>
     <h2>Chip wählen</h2>
     <div class="chips" id="chips"></div>
     <h2>Einsätze</h2>
     <div class="bets" id="toppingBets"></div>
     <div class="colors" id="colorBets"></div>
-    <p class="hint">Linksklick: Chip setzen · Rechtsklick: Chip zurücknehmen · 🔥 Verbrannt = alles weg</p>
+    <p class="hint">Linksklick: Chip setzen · Rechtsklick: Chip zurücknehmen · 🔥 Verbrannt = alles weg · Pizza: 3 verschiedene Belag-Treffer = +50</p>
     <div class="actions">
       <button class="main sec" id="clearBtn">Löschen</button>
       <button class="main" id="spinBtn">Drehen!</button>
@@ -166,12 +186,15 @@
   <div class="panel">
     <h2>Pizza-Roulette</h2>
     <ul>
-      <li>Du startest mit <b>100 Punkten</b> und hast <b>4 Minuten</b>.</li>
-      <li>Setz Chips auf Beläge (<b>5×</b>) oder Farben (<b>2×</b>).</li>
-      <li>Rot = Tomatenbeläge, Weiß = Käse, Pilze &amp; Co.</li>
-      <li>🔥 <b>Verbrannt</b>: alle Einsätze verloren.</li>
-      <li>Triff 3 verschiedene Beläge: <b>Pizza fertig, +50</b>.</li>
+      <li>Jeder startet mit <b>100 Punkten</b> und einer eigenen Uhr von <b>2 Minuten</b>.</li>
+      <li>Es wird abwechselnd gedreht. Deine Uhr läuft nur, solange du am Zug bist.</li>
+      <li>Belag richtig: <b>7×</b> · Farbe richtig: <b>2×</b> · 🔥 Verbrannt: alles weg.</li>
+      <li>3 verschiedene Beläge getroffen: <b>Pizza fertig, +50</b>.</li>
+      <li>Wer keine Zeit oder keine Punkte mehr hat, scheidet aus. Am Schluss gewinnt der höchste Punktestand.</li>
     </ul>
+    <h2 style="font-size:28px;color:var(--ink)">Wie viele Spieler?</h2>
+    <div class="count" id="countBtns"></div>
+    <div class="names" id="nameInputs"></div>
     <button class="main" id="startBtn">Ofen an!</button>
   </div>
 </div>
@@ -179,7 +202,8 @@
 <div class="overlay hidden" id="endOverlay">
   <div class="panel">
     <h2 id="endTitle">Feierabend!</h2>
-    <p style="font-size:22px;font-weight:800" id="endText"></p>
+    <ul class="ranking" id="ranking"></ul>
+    <p style="font-weight:800" id="endHigh"></p>
     <button class="main" id="restartBtn">Nochmal!</button>
   </div>
 </div>
@@ -188,54 +212,92 @@
 (() => {
   // --- Spieldaten ---
   const TOPPINGS = {
-    salami:   { name: "Salami",   emo: "🍖", color: "red" },
+    salami:   { name: "Salami",   emo: "🍕", color: "red" },
+    schinken: { name: "Schinken", emo: "🥓", color: "red" },
     peperoni: { name: "Peperoni", emo: "🌶️", color: "red" },
     tomate:   { name: "Tomate",   emo: "🍅", color: "red" },
     kaese:    { name: "Käse",     emo: "🧀", color: "white" },
     pilze:    { name: "Pilze",    emo: "🍄", color: "white" },
     ananas:   { name: "Ananas",   emo: "🍍", color: "white" },
+    kapern:   { name: "Kapern",   emo: "🫒", color: "white" },
   };
-  // Radfelder: rot/weiß abwechselnd, ein Feld "verbrannt"
-  const FIELDS = ["burnt", "salami", "kaese", "peperoni", "pilze", "tomate", "ananas",
-                  "salami", "kaese", "peperoni", "pilze", "tomate", "ananas"];
-  const PAYOUT_TOPPING = 5, PAYOUT_COLOR = 2, PIZZA_BONUS = 50;
-  const START_BALANCE = 100, GAME_SECONDS = 240;
+  // Radfelder: rot/weiß abwechselnd, jeder Belag zweimal, ein Feld "verbrannt"
+  const FIELDS = ["burnt",
+    "salami", "kaese", "schinken", "pilze", "peperoni", "ananas", "tomate", "kapern",
+    "salami", "kaese", "schinken", "pilze", "peperoni", "ananas", "tomate", "kapern"];
+  const PAYOUT_TOPPING = 7, PAYOUT_COLOR = 2, PIZZA_BONUS = 50;
+  const START_BALANCE = 100, CLOCK_SECONDS = 120;
   const CHIP_VALUES = [1, 5, 10, 25];
+  const SEG = Math.PI * 2 / FIELDS.length;
 
   // --- Zustand ---
-  let balance, bets, chip = 5, rotation = 0, spinning = false;
-  let timeLeft, timerId = null, running = false, timeUp = false, pizza = [];
+  let players = [], current = 0, bets = {}, chip = 5, rotation = 0;
+  let spinning = false, running = false, timerId = null, lastTick = 0;
+  let playerCount = 2;
   let highscore = 0;
   try { highscore = Number(localStorage.getItem("pizzaRouletteHigh")) || 0; } catch (e) {}
 
   const $ = id => document.getElementById(id);
   const canvas = $("wheel"), ctx = canvas.getContext("2d");
-  const SEG = Math.PI * 2 / FIELDS.length;
+  const cur = () => players[current];
 
-  // --- Sound (Web Audio, ohne Dateien) ---
-  let audio = null, muted = false;
-  function tone(freq, dur, type = "square", vol = 0.08, delay = 0) {
+  // --- Sound (Web Audio, ohne Dateien, bewusst leise) ---
+  let audio = null, master = null, muted = false;
+  function ac() {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      master = audio.createGain(); master.gain.value = 0.35;
+      master.connect(audio.destination);
+    }
+    return audio;
+  }
+  function tone(freq, dur, type = "triangle", vol = 0.1, delay = 0, slideTo = null) {
     if (muted) return;
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    const t = audio.currentTime + delay;
-    const o = audio.createOscillator(), g = audio.createGain();
+    const a = ac(), t = a.currentTime + delay;
+    const o = a.createOscillator(), g = a.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(master);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  function noise(dur, vol = 0.1, delay = 0, freq = 2000, q = 1, type = "bandpass") {
+    if (muted) return;
+    const a = ac(), t = a.currentTime + delay;
+    const buf = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource(); src.buffer = buf;
+    const f = a.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = a.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(audio.destination);
-    o.start(t); o.stop(t + dur);
+    src.connect(f).connect(g).connect(master);
+    src.start(t);
   }
-  const sTick = () => tone(900, 0.03, "square", 0.04);
-  const sWin = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, "triangle", 0.12, i * 0.1));
-  const sLose = () => [300, 220].forEach((f, i) => tone(f, 0.3, "sawtooth", 0.06, i * 0.2));
-  const sBonus = () => [784, 988, 1175, 1568, 1175, 1568].forEach((f, i) => tone(f, 0.15, "triangle", 0.12, i * 0.08));
+  const sChip = () => { noise(0.05, 0.25, 0, 3500, 4); tone(1200, 0.04, "sine", 0.05); };
+  const sTick = () => { noise(0.03, 0.3, 0, 2500, 6); tone(1800, 0.02, "sine", 0.03); };
+  const sDrumroll = () => { for (let i = 0; i < 24; i++) noise(0.06, 0.06 + i * 0.004, i * 0.045, 900, 1.5); };
+  const sLand = () => { tone(784, 0.25, "sine", 0.12); tone(1175, 0.35, "sine", 0.08, 0.05); };
+  const sWin = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, "triangle", 0.14, i * 0.09));
+  const sBigWin = () => {
+    [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, "triangle", 0.14, i * 0.08));
+    [0, 0.16, 0.32, 0.48].forEach(d => noise(0.15, 0.12, d, 6000, 0.7, "highpass"));
+  };
+  const sLose = () => tone(330, 0.5, "triangle", 0.12, 0, 160);
+  const sBurnt = () => { noise(1.2, 0.35, 0, 4000, 0.5, "highpass"); tone(180, 0.6, "sawtooth", 0.05, 0.1, 70); };
+  const sBonus = () => [784, 988, 1175, 1568, 1175, 1568].forEach((f, i) => tone(f, 0.16, "triangle", 0.14, i * 0.08));
+  const sTurn = () => { tone(660, 0.15, "sine", 0.12); tone(990, 0.25, "sine", 0.1, 0.12); };
+  const sWarn = () => tone(880, 0.06, "sine", 0.06);
+  const sOut = () => [440, 370, 311, 262].forEach((f, i) => tone(f, 0.25, "triangle", 0.1, i * 0.15));
   $("muteBtn").onclick = () => { muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊"; };
 
   // --- Rad zeichnen ---
   function drawWheel() {
     const W = canvas.width, c = W / 2, r = c - 10;
     ctx.clearRect(0, 0, W, W);
-    // Kruste
     ctx.beginPath(); ctx.arc(c, c, r + 6, 0, Math.PI * 2);
     ctx.fillStyle = "#c97b2a"; ctx.fill();
     FIELDS.forEach((f, i) => {
@@ -244,29 +306,47 @@
       ctx.fillStyle = f === "burnt" ? "#2b2b2b" : TOPPINGS[f].color === "red" ? "#e23b2e" : "#fffdf5";
       ctx.fill();
       ctx.lineWidth = 3; ctx.strokeStyle = "#2b1a0e"; ctx.stroke();
-      // Emoji
       ctx.save();
       ctx.translate(c, c); ctx.rotate(a0 + SEG / 2);
-      ctx.translate(r * 0.72, 0); ctx.rotate(Math.PI / 2);
-      ctx.font = "34px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.translate(r * 0.74, 0); ctx.rotate(Math.PI / 2);
+      ctx.font = "30px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(f === "burnt" ? "🔥" : TOPPINGS[f].emo, 0, 0);
       ctx.restore();
     });
-    // Mitte
     ctx.beginPath(); ctx.arc(c, c, r * 0.22, 0, Math.PI * 2);
     ctx.fillStyle = "#ffd27a"; ctx.fill(); ctx.lineWidth = 4; ctx.stroke();
     ctx.font = "44px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("🍕", c, c + 2);
   }
 
+  // --- Startbildschirm ---
+  function buildSetup() {
+    $("countBtns").innerHTML = "";
+    [2, 3, 4].forEach(n => {
+      const b = document.createElement("button");
+      b.textContent = n; b.className = n === playerCount ? "active" : "";
+      b.onclick = () => { playerCount = n; buildSetup(); };
+      $("countBtns").appendChild(b);
+    });
+    const old = [...$("nameInputs").querySelectorAll("input")].map(i => i.value);
+    $("nameInputs").innerHTML = "";
+    for (let i = 0; i < playerCount; i++) {
+      const inp = document.createElement("input");
+      inp.id = "name" + i; inp.maxLength = 16;
+      inp.placeholder = "Spieler " + (i + 1);
+      inp.value = old[i] || "";
+      $("nameInputs").appendChild(inp);
+    }
+  }
+
   // --- Einsätze UI ---
-  function buildUI() {
+  function buildBetUI() {
     $("chips").innerHTML = "";
     CHIP_VALUES.forEach(v => {
       const b = document.createElement("button");
       b.className = "chip" + (v === chip ? " active" : "");
       b.textContent = v;
-      b.onclick = () => { chip = v; buildUI(); };
+      b.onclick = () => { chip = v; buildBetUI(); };
       $("chips").appendChild(b);
     });
     $("toppingBets").innerHTML = ""; $("colorBets").innerHTML = "";
@@ -279,46 +359,101 @@
   function betButton(key, html, color) {
     const d = document.createElement("div");
     d.className = "bet" + (color === "red" ? " red" : "");
+    d.tabIndex = 0;
     d.innerHTML = html + `<span class="stake" id="stake-${key}"></span>`;
     d.onclick = () => placeBet(key, chip);
+    d.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); placeBet(key, chip); } };
     d.oncontextmenu = e => { e.preventDefault(); placeBet(key, -chip); };
     return d;
   }
   function placeBet(key, amount) {
     if (!running || spinning) return;
-    const cur = bets[key] || 0;
-    if (amount > 0) amount = Math.min(amount, balance);
-    else amount = -Math.min(-amount, cur);
+    const p = cur(), have = bets[key] || 0;
+    amount = amount > 0 ? Math.min(amount, p.balance) : -Math.min(-amount, have);
     if (!amount) return;
-    bets[key] = cur + amount;
+    bets[key] = have + amount;
     if (!bets[key]) delete bets[key];
-    balance -= amount;
-    tone(600, 0.05, "triangle", 0.06);
+    p.balance -= amount;
+    sChip();
     refresh();
   }
   const totalBet = () => Object.values(bets).reduce((a, b) => a + b, 0);
+  function returnBets() { if (players.length) cur().balance += totalBet(); bets = {}; }
 
+  // --- Anzeige ---
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  function renderPlayers() {
+    $("players").innerHTML = "";
+    players.forEach((p, i) => {
+      const d = document.createElement("div");
+      d.className = "player" + (i === current && running ? " active" : "") + (p.out ? " out" : "");
+      const mini = p.pizza.map(k => TOPPINGS[k].emo).join("") + "◯".repeat(3 - p.pizza.length);
+      d.innerHTML = `<div><div class="name"></div><div class="mini" title="Pizza-Fortschritt">${mini}</div></div>
+        <div class="pts">${p.balance}</div>
+        <div class="clock${p.time <= 15 && !p.out ? " low" : ""}">${p.out ? "aus" : fmt(p.time)}</div>`;
+      d.querySelector(".name").textContent = (i === current && running ? "▶ " : "") + p.name;
+      $("players").appendChild(d);
+    });
+  }
   function refresh() {
-    $("balance").textContent = balance;
-    $("highscore").textContent = highscore;
+    renderPlayers();
+    if (running && players.length) {
+      $("turn").innerHTML = "";
+      $("turn").append("Am Zug: ");
+      const s = document.createElement("span"); s.textContent = cur().name; $("turn").append(s);
+    }
     document.querySelectorAll(".stake").forEach(s => {
       const v = bets[s.id.slice(6)];
       s.textContent = v || ""; s.classList.toggle("show", !!v);
     });
     $("spinBtn").disabled = !running || spinning || totalBet() === 0;
     $("clearBtn").disabled = !running || spinning || totalBet() === 0;
-    for (let i = 0; i < 3; i++) {
-      const s = $("slot" + i);
-      s.textContent = pizza[i] ? TOPPINGS[pizza[i]].emo : "";
-      s.classList.toggle("filled", !!pizza[i]);
-    }
   }
   function setMsg(text, cls = "") { const m = $("msg"); m.textContent = text; m.className = "msg " + cls; }
 
-  $("clearBtn").onclick = () => {
-    if (spinning) return;
-    balance += totalBet(); bets = {}; refresh();
-  };
+  $("clearBtn").onclick = () => { if (!spinning) { returnBets(); refresh(); } };
+
+  // --- Uhr: läuft nur für den aktiven Spieler und nicht während das Rad dreht ---
+  function startClock() {
+    clearInterval(timerId);
+    lastTick = performance.now();
+    timerId = setInterval(() => {
+      const now = performance.now(), dt = (now - lastTick) / 1000; lastTick = now;
+      if (!running || spinning) return;
+      const p = cur(), before = Math.ceil(p.time);
+      p.time -= dt;
+      const after = Math.ceil(p.time);
+      if (after !== before && after <= 10 && after > 0) sWarn();
+      if (p.time <= 0) {
+        p.time = 0;
+        returnBets();
+        knockOut(p, "⏰ Zeit abgelaufen");
+        return;
+      }
+      renderPlayers();
+    }, 100);
+  }
+
+  function knockOut(p, reason) {
+    p.out = true; sOut();
+    setMsg(`${reason}: ${p.name} ist raus`, "lose");
+    nextTurn(true);
+  }
+
+  function nextTurn(afterKnockout = false) {
+    bets = {};
+    const alive = players.filter(p => !p.out);
+    if (!alive.length) { setTimeout(endGame, 1200); running = false; refresh(); return; }
+    let i = current;
+    do { i = (i + 1) % players.length; } while (players[i].out);
+    const changed = i !== current;
+    current = i;
+    if (changed && players.length > 1) {
+      setTimeout(() => { if (running) { sTurn(); if (!afterKnockout) setMsg(`${cur().name} ist dran!`); } }, afterKnockout ? 1000 : 1400);
+    }
+    lastTick = performance.now();
+    refresh();
+  }
 
   // --- Drehen ---
   function randomIndex() {
@@ -326,13 +461,11 @@
     return a[0] % FIELDS.length;
   }
   $("spinBtn").onclick = () => {
-    if (spinning || !totalBet()) return;
-    spinning = true; refresh(); setMsg("Dreht sich …");
+    if (spinning || !totalBet() || !running) return;
+    spinning = true; refresh(); setMsg("Dreht sich …"); sDrumroll();
     const idx = randomIndex();
-    // Zielwinkel: Feldmitte genau unter dem Zeiger (oben = -90°)
-    const base = -Math.PI / 2 - (idx + 0.5) * SEG;
-    const jitter = (Math.random() - 0.5) * SEG * 0.7;
-    let target = base + jitter;
+    // Zielwinkel: Feldmitte unter dem Zeiger (oben = -90°)
+    let target = -Math.PI / 2 - (idx + 0.5) * SEG + (Math.random() - 0.5) * SEG * 0.7;
     const turns = Math.PI * 2 * (5 + Math.floor(Math.random() * 3));
     while (target < rotation + turns) target += Math.PI * 2;
     const start = rotation, dist = target - start, dur = 4200, t0 = performance.now();
@@ -350,77 +483,81 @@
   };
 
   function resolve(field) {
+    const p = cur(), stake = totalBet();
     let win = 0;
+    const hitTopping = field !== "burnt" && (bets[field] || 0) > 0;
     if (field !== "burnt") {
       win += (bets[field] || 0) * PAYOUT_TOPPING;
       win += (bets[TOPPINGS[field].color] || 0) * PAYOUT_COLOR;
     }
-    const stake = totalBet();
-    const hitTopping = field !== "burnt" && (bets[field] || 0) > 0;
-    balance += win;
+    p.balance += win;
     bets = {};
-    if (field === "burnt") {
-      setMsg("🔥 Verbrannt! Alles weg.", "lose"); sLose();
-    } else if (win > 0) {
-      const net = win - stake;
-      const txt = net > 0 ? `+${net} Punkte` : net === 0 ? "Einsatz zurück" : `−${-net} Punkte`;
-      setMsg(`${TOPPINGS[field].emo} ${TOPPINGS[field].name}! ${txt}`, net > 0 ? "win" : "");
-      sWin();
-    } else {
-      setMsg(`${TOPPINGS[field].emo} ${TOPPINGS[field].name}. Daneben, −${stake}`, "lose"); sLose();
-    }
-    // Pizza-Bonus: Belag zählt, wenn direkt darauf gesetzt und getroffen
-    if (hitTopping && !pizza.includes(field)) {
-      pizza.push(field);
-      if (pizza.length === 3) {
-        balance += PIZZA_BONUS; pizza = [];
-        setTimeout(() => { setMsg(`🍕 Pizza fertig! +${PIZZA_BONUS} Bonus`, "win"); sBonus(); }, 900);
+    sLand();
+    setTimeout(() => {
+      if (field === "burnt") { setMsg(`🔥 Verbrannt! ${p.name} verliert ${stake}`, "lose"); sBurnt(); }
+      else {
+        const net = win - stake, t = TOPPINGS[field];
+        const txt = net > 0 ? `+${net}` : net === 0 ? "Einsatz zurück" : `−${-net}`;
+        setMsg(`${t.emo} ${t.name}! ${p.name}: ${txt}`, net > 0 ? "win" : net < 0 ? "lose" : "");
+        if (net >= stake * 3) sBigWin(); else if (net > 0) sWin(); else if (net < 0) sLose();
       }
+    }, 250);
+    let bonus = false;
+    if (hitTopping && !p.pizza.includes(field)) {
+      p.pizza.push(field);
+      if (p.pizza.length === 3) { p.balance += PIZZA_BONUS; p.pizza = []; bonus = true; }
     }
     spinning = false;
-    refresh();
-    if (timeUp || balance <= 0) setTimeout(endGame, 1200);
+    if (bonus) setTimeout(() => { setMsg(`🍕 Pizza fertig! ${p.name} +${PIZZA_BONUS}`, "win"); sBonus(); }, 1300);
+    if (p.balance <= 0) {
+      p.out = true;
+      setTimeout(() => { setMsg(`💸 Pleite: ${p.name} ist raus`, "lose"); sOut(); }, 1400);
+      nextTurn(true);
+      return;
+    }
+    nextTurn();
   }
+
   // --- Spielablauf ---
-  function fmt(s) { return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   function startGame() {
-    balance = START_BALANCE; bets = {}; pizza = []; timeLeft = GAME_SECONDS;
-    running = true; timeUp = false;
-    $("timer").textContent = fmt(timeLeft);
+    players = [];
+    for (let i = 0; i < playerCount; i++) {
+      const v = ($("name" + i)?.value || "").trim();
+      players.push({ name: v || "Spieler " + (i + 1), balance: START_BALANCE, time: CLOCK_SECONDS, pizza: [], out: false });
+    }
+    current = 0; bets = {}; running = true; spinning = false;
     $("startOverlay").classList.add("hidden"); $("endOverlay").classList.add("hidden");
-    setMsg("Setz deine Chips!");
-    clearInterval(timerId);
-    timerId = setInterval(() => {
-      timeLeft--;
-      $("timer").textContent = fmt(Math.max(0, timeLeft));
-      if (timeLeft <= 10 && timeLeft > 0) tone(440, 0.08, "square", 0.05);
-      if (timeLeft <= 0) {
-        clearInterval(timerId); timeUp = true;
-        if (!spinning) endGame();
-      }
-    }, 1000);
+    setMsg(`${cur().name} fängt an!`);
+    sTurn();
+    startClock();
     refresh();
   }
   function endGame() {
-    if (!running) return;
     running = false; clearInterval(timerId);
-    balance += totalBet(); bets = {};
-    const isNew = balance > highscore;
-    if (isNew) {
-      highscore = balance;
+    const ranked = [...players].sort((a, b) => b.balance - a.balance);
+    const best = ranked[0];
+    $("endTitle").textContent = best.balance > 0 ? `🏆 ${best.name} gewinnt!` : "Alle pleite! 🔥";
+    $("ranking").innerHTML = "";
+    ranked.forEach((p, i) => {
+      const li = document.createElement("li");
+      const a = document.createElement("span"); a.textContent = `${i + 1}. ${p.name}`;
+      const b = document.createElement("span"); b.textContent = p.balance + " P";
+      li.append(a, b); $("ranking").appendChild(li);
+    });
+    let txt = `Highscore: ${Math.max(highscore, best.balance)}`;
+    if (best.balance > highscore) {
+      highscore = best.balance; txt = "Neuer Highscore: " + highscore + "!";
       try { localStorage.setItem("pizzaRouletteHigh", highscore); } catch (e) {}
     }
-    $("endTitle").textContent = balance <= 0 ? "Pleite! 🔥" : "Feierabend! 🍕";
-    $("endText").textContent = `Endstand: ${balance} Punkte` + (isNew ? " · Neuer Highscore!" : ` · Highscore: ${highscore}`);
+    $("endHigh").textContent = txt;
     $("endOverlay").classList.remove("hidden");
-    if (isNew && balance > 0) sBonus();
+    if (best.balance > 0) sBonus();
     refresh();
   }
   $("startBtn").onclick = startGame;
-  $("restartBtn").onclick = startGame;
+  $("restartBtn").onclick = () => { $("endOverlay").classList.add("hidden"); $("startOverlay").classList.remove("hidden"); buildSetup(); };
 
-  balance = START_BALANCE; bets = {};
-  buildUI(); drawWheel();
+  buildSetup(); buildBetUI(); drawWheel(); refresh();
 })();
 </script>
 </body>
